@@ -2,16 +2,18 @@
 
 import { AppHeader } from '@/components/app-header'
 import { BottomNav } from '@/components/bottom-nav'
-import { DashboardContent } from '@/components/dashboard-content'
+import { InventoryContent } from '@/components/inventory-content'
+import { Toaster } from '@/components/ui/sonner'
 
-export default function DashboardPage() {
+export default function InventarioPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
-      <AppHeader title="FIORA" />
+      <AppHeader title="Inventario" />
       <main className="px-4 py-4 max-w-lg mx-auto">
-        <DashboardContent />
+        <InventoryContent />
       </main>
       <BottomNav />
+      <Toaster position="top-center" />
     </div>
   )
 }

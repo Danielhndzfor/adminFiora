@@ -2,16 +2,18 @@
 
 import { AppHeader } from '@/components/app-header'
 import { BottomNav } from '@/components/bottom-nav'
-import { DashboardContent } from '@/components/dashboard-content'
+import { HistoryContent } from '@/components/history-content'
+import { Toaster } from '@/components/ui/sonner'
 
-export default function DashboardPage() {
+export default function HistorialPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
-      <AppHeader title="FIORA" />
+      <AppHeader title="Historial" />
       <main className="px-4 py-4 max-w-lg mx-auto">
-        <DashboardContent />
+        <HistoryContent />
       </main>
       <BottomNav />
+      <Toaster position="top-center" />
     </div>
   )
 }
