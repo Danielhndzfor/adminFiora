@@ -47,7 +47,7 @@ export function CartPanel({ onClose }: CartPanelProps) {
 
   if (cart.length === 0) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 animate-in fade-in duration-150">
+      <div className="fixed inset-0 z-60 flex items-end justify-center bg-black/50 animate-in fade-in duration-150">
         <div className="w-full max-w-lg bg-card rounded-t-2xl p-4 pb-safe animate-in slide-in-from-bottom duration-200">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Carrito</h2>
@@ -66,7 +66,7 @@ export function CartPanel({ onClose }: CartPanelProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-60 flex items-end justify-center bg-black/50 animate-in fade-in duration-150">
       <div className="w-full max-w-lg bg-card rounded-t-2xl p-4 pb-safe animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">

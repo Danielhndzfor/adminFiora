@@ -1,22 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google'
+import { Inter, Merriweather } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
 import './globals.css'
 
-const geist = Geist({ 
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-geist',
+  variable: '--font-inter',
 })
 
-const geistMono = Geist_Mono({ 
+const merri = Merriweather({
   subsets: ['latin'],
-  variable: '--font-geist-mono',
-})
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
+  variable: '--font-merri',
 })
 
 export const metadata: Metadata = {
@@ -49,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${geist.variable} ${geistMono.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${merri.variable} font-sans antialiased`}>
         <StoreProvider>
           {children}
         </StoreProvider>

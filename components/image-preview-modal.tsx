@@ -20,7 +20,7 @@ function formatCurrency(amount: number) {
 export function ImagePreviewModal({ product, onClose }: ImagePreviewModalProps) {
   return (
     <div 
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 animate-in fade-in duration-150"
+      className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div 
@@ -46,7 +46,7 @@ export function ImagePreviewModal({ product, onClose }: ImagePreviewModalProps) 
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/5 to-primary/10">
               <Package className="h-24 w-24 text-primary/30" />
             </div>
           )}

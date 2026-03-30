@@ -77,7 +77,7 @@ export function EditProductModal({ product, onClose }: EditProductModalProps) {
 
   if (showDeleteConfirm) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 animate-in fade-in duration-150">
+      <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 animate-in fade-in duration-150">
         <div className="w-full max-w-sm mx-4 bg-card rounded-2xl p-4 animate-in zoom-in-95 duration-200">
           <div className="text-center py-4">
             <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
@@ -110,7 +110,7 @@ export function EditProductModal({ product, onClose }: EditProductModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 animate-in fade-in duration-150">
       <div className="w-full max-w-lg mx-4 max-h-[85vh] overflow-y-auto bg-card rounded-2xl p-4 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

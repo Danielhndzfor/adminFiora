@@ -41,7 +41,7 @@ export function ProductCard({ product, onTap, onPreview, showCode }: ProductCard
     >
       <div className="relative aspect-square bg-muted">
         {/* Product image placeholder */}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-primary/5 to-primary/10">
           <Package className="h-12 w-12 text-primary/30" />
         </div>
         
@@ -74,7 +74,7 @@ export function ProductCard({ product, onTap, onPreview, showCode }: ProductCard
       </div>
       
       <CardContent className="p-3">
-        <h3 className="text-sm font-medium leading-tight line-clamp-2 min-h-[2.5rem]">
+        <h3 className="text-sm font-medium leading-tight line-clamp-2 min-h-2.5rem">
           {product.name}
         </h3>
         <p className="text-lg font-bold text-primary mt-1">
