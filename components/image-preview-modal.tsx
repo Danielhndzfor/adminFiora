@@ -1,70 +1,55 @@
 'use client'
 
-import type { Product } from '@/lib/types'
-import { Button } from '@/components/ui/button'
 import { X, Package } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ImagePreviewModalProps {
-  product: Product
+  isOpen: boolean
   onClose: () => void
+  imageUrl?: string
+  productName?: string
 }
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 0,
-  }).format(amount)
-}
+export function ImagePreviewModal({ isOpen, onClose, imageUrl, productName }: ImagePreviewModalProps) {
+  if (!isOpen) return null
 
-export function ImagePreviewModal({ product, onClose }: ImagePreviewModalProps) {
   return (
     <div 
-      className="fixed inset-0 z-70 flex items-center justify-center bg-black/80 animate-in fade-in duration-150"
+      className="fixed inset-0 z-999 flex items-center justify-center bg-black/80 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-sm mx-4 bg-card rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl mx-4 bg-[#feffff] rounded-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 z-10 bg-black/40 hover:bg-black/60 text-white"
+          className="absolute top-4 right-4 z-10 bg-[#092B2B]/20 hover:bg-[#092B2B]/40 text-[#092B2B]"
           onClick={onClose}
         >
           <X className="h-5 w-5" />
         </Button>
 
-        {/* Large image */}
-        <div className="aspect-square bg-muted">
-          {product.image && product.image !== '/products/default.jpg' ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/5 to-primary/10">
-              <Package className="h-24 w-24 text-primary/30" />
-            </div>
+        {/* Content */}
+        <div className="flex flex-col items-center gap-4 p-6">
+          {productName && (
+            <h2 className="text-2xl font-bold text-[#092B2B]">{productName}</h2>
           )}
-        </div>
-
-        {/* Product info */}
-        <div className="p-4">
-          <p className="text-xs font-mono text-muted-foreground mb-1">{product.code}</p>
-          <h3 className="text-lg font-semibold">{product.name}</h3>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-xl font-bold text-primary">{formatCurrency(product.price)}</p>
-            <p className="text-sm text-muted-foreground">
-              Stock: <span className="font-medium text-foreground">{product.stock}</span>
-            </p>
+          
+          {/* Large image */}
+          <div className="w-full max-h-[70vh] bg-[#092B2B]/5 rounded-xl overflow-hidden flex items-center justify-center">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={productName}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <Package className="h-24 w-24 text-[#092B2B]/30" />
+            )}
           </div>
-          {product.category && (
-            <p className="text-sm text-muted-foreground mt-1">{product.category}</p>
-          )}
         </div>
       </div>
     </div>

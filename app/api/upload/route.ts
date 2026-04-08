@@ -13,10 +13,13 @@ export async function POST(request: Request) {
 
         const upload = await uploadImageFromBase64(imageBase64, { folder: 'fiora' })
 
-        const product = await prisma.product.create({
+        const product = await prisma.producto.create({
             data: {
-                name: name ?? 'Sin nombre',
-                image: upload.secure_url,
+                codigo: 'IMG-' + Date.now(),
+                nombre: name ?? 'Sin nombre',
+                imagen: upload.secure_url,
+                precio: 0,
+                categoriaId: 1,
             },
         })
 

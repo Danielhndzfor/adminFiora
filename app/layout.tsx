@@ -20,12 +20,18 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'FIORA',
+    startupImage: '/IconoBeigeFondo.png',
   },
   icons: {
-    icon: '/icon.svg',
-    apple: '/apple-icon.png',
+    icon: '/IconoBeigeFondo.png',
+    apple: '/IconoBeigeFondo.png',
+    shortcut: '/IconoBeigeFondo.png',
+  },
+  applicationName: 'FIORA',
+  formatDetection: {
+    telephone: false,
   },
 }
 
@@ -34,7 +40,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#2d5a3d',
+  themeColor: '#092b2b',
 }
 
 export default function RootLayout({

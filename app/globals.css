@@ -7,6 +7,10 @@
 
 :root {
   /* FIORA - Forest Green Luxury Theme */
+  --fiora-dark: #092b2b;
+  --fiora-gold: #bfa274;
+  --fiora-light: #feffff;
+
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -96,6 +100,9 @@
   --font-sans: var(--font-inter);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
   --font-serif: var(--font-merri);
+  --color-fiora-dark: var(--fiora-dark);
+  --color-fiora-gold: var(--fiora-gold);
+  --color-fiora-light: var(--fiora-light);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

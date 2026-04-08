@@ -107,7 +107,7 @@ export function DashboardContent() {
           <CardContent className="pt-0">
             <div className="flex flex-col gap-2">
               {metrics.topProducts.map((product, index) => (
-                <div 
+                <div
                   key={product.name}
                   className="flex items-center justify-between py-2 border-b border-border last:border-0"
                 >
@@ -139,7 +139,7 @@ export function DashboardContent() {
           <CardContent className="pt-0">
             <div className="flex flex-col gap-2">
               {metrics.lowStockProducts.slice(0, 5).map((product) => (
-                <div 
+                <div
                   key={product.id}
                   className="flex items-center justify-between py-2 border-b border-warning/20 last:border-0"
                 >

@@ -1,0 +1,62 @@
+{
+  "name": "FIORA | Sistema de Joyería",
+  "short_name": "FIORA",
+  "description": "Sistema administrativo e inventario para joyería FIORA. Ventas rápidas, gestión de inventario y reportes.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#092b2b",
+  "theme_color": "#092b2b",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/IconoBeigeFondo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/IconoBeigeFondo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple touch icon"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logoFioraFVerde.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "FIORA - Sistema de Joyería"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Ventas",
+      "short_name": "Ventas",
+      "url": "/ventas",
+      "description": "Ir al punto de venta",
+      "icons": [{ "src": "/IconoBeigeFondo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Inventario",
+      "short_name": "Inventario",
+      "url": "/inventario",
+      "description": "Gestionar inventario",
+      "icons": [{ "src": "/IconoBeigeFondo.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": []
+}
