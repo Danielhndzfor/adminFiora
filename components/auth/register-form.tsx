@@ -6,6 +6,14 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog'
 
 export default function RegistroForm() {
   const router = useRouter()
@@ -13,6 +21,9 @@ export default function RegistroForm() {
   const [cargando, setCargando] = useState(false)
   const [mostrarErrores, setMostrarErrores] = useState(false)
   const [erroresContrasena, setErroresContrasena] = useState<string[]>([])
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogTitle, setDialogTitle] = useState('')
+  const [dialogMessage, setDialogMessage] = useState('')
 
   const [form, setForm] = useState({
     nombre: '',
@@ -68,7 +79,13 @@ export default function RegistroForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        toast.error(data.error || 'Error en registro')
+        const message = data?.error || 'Error en registro'
+        const code = data?.code ? ` (Código: ${data.code})` : ''
+        const full = message + code
+        toast.error(full)
+        setDialogTitle('Error en registro')
+        setDialogMessage(full)
+        setDialogOpen(true)
         return
       }
 
@@ -76,8 +93,10 @@ export default function RegistroForm() {
       localStorage.setItem('usuario', JSON.stringify(data.usuario))
 
       toast.success('Cuenta creada correctamente')
-
-      router.push('/dashboard')
+      setDialogTitle('Registro exitoso')
+      setDialogMessage('Tu cuenta fue creada correctamente.')
+      setDialogOpen(true)
+      // router.push('/dashboard') // navegamos tras aceptar en el modal
     } catch (err) {
       toast.error('Error de conexión')
     } finally {
@@ -261,6 +280,17 @@ export default function RegistroForm() {
       <p className="mt-8 text-xs" style={{ color: 'rgba(254,255,255,0.2)' }}>
         © 2026 FIORA · Todos los derechos reservados
       </p>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>{dialogMessage}</DialogDescription>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button onClick={() => router.push('/dashboard')}>Aceptar</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

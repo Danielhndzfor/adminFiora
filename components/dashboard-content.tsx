@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useStore } from '@/lib/store'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Banknote, CreditCard, Wallet, AlertTriangle, Package } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  TrendingUp, Banknote, CreditCard, Wallet,
+  AlertTriangle, Package, Calendar, Receipt, ArrowUpRight,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function formatCurrency(amount: number) {
@@ -15,157 +18,236 @@ function formatCurrency(amount: number) {
 }
 
 function getStockColor(stock: number) {
-  if (stock <= 1) return 'text-stock-low bg-stock-low/10'
-  if (stock <= 3) return 'text-stock-medium bg-stock-medium/10'
-  return 'text-stock-high bg-stock-high/10'
+  if (stock <= 1) return 'text-red-600 bg-red-50 dark:bg-red-950/30'
+  if (stock <= 3) return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950/30'
+  return 'text-green-600 bg-green-50 dark:bg-green-950/30'
 }
 
-export function DashboardContent() {
-  const { getDashboardMetrics, currentBranch } = useStore()
-  const metrics = getDashboardMetrics()
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+interface DashboardMetrics {
+  totalRevenue: number
+  ticketCount: number
+  avgTicket: number
+  maxTicket: number
+  salesByPayment: Record<string, number>
+  salesByPaymentId: Record<number, number>
+  topProducts: { name: string; count: number }[]
+  lowStockProducts: { id: number; nombre: string; stock: number }[]
+}
+
+function MetricsView({ queryString }: { queryString: string }) {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLastUpdated(new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }))
-  }, [])
+    let cancelled = false
+    setLoading(true)
+    fetch(`/api/dashboard/metrics?${queryString}`)
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) { setMetrics(data); setLoading(false) } })
+      .catch(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [queryString])
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    )
+  }
+
+  const salesByPaymentId = metrics?.salesByPaymentId ?? {}
+  const salesByCash = salesByPaymentId[1] ?? 0
+  const salesByTransfer = salesByPaymentId[2] ?? 0
+  const otherPaymentIds = Object.keys(salesByPaymentId)
+    .map(Number)
+    .filter((id) => ![1, 2].includes(id))
+  const salesByOther = otherPaymentIds.reduce((sum, id) => sum + (salesByPaymentId[id] ?? 0), 0)
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Branch indicator */}
-      {currentBranch && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="h-2 w-2 rounded-full bg-primary" />
-          <span>{currentBranch.name}</span>
-        </div>
-      )}
+      {/* Main revenue */}
+      <Card className="bg-primary text-primary-foreground">
+        <CardContent className="flex items-center justify-between p-4">
+          <div>
+            <p className="text-sm opacity-90">Total del periodo</p>
+            <p className="text-3xl font-bold tracking-tight">{formatCurrency(metrics?.totalRevenue ?? 0)}</p>
+            <p className="text-sm opacity-75 mt-1">{metrics?.ticketCount ?? 0} tickets completados</p>
+          </div>
+          <div className="h-14 w-14 rounded-full bg-primary-foreground/10 flex items-center justify-center">
+            <TrendingUp className="h-7 w-7" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Main metrics */}
+      {/* Payment methods */}
       <div className="grid grid-cols-2 gap-3">
-        <Card className="col-span-2 bg-primary text-primary-foreground">
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
-              <p className="text-sm opacity-90">Ventas de hoy</p>
-              <p className="text-3xl font-bold tracking-tight">{formatCurrency(metrics.totalRevenue)}</p>
-              <p className="text-sm opacity-75 mt-1">{metrics.todaySales} transacciones</p>
-            </div>
-            <div className="h-14 w-14 rounded-full bg-primary-foreground/10 flex items-center justify-center">
-              <TrendingUp className="h-7 w-7" />
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center">
-                <Banknote className="h-4 w-4 text-success" />
-              </div>
+            <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center mb-2">
+              <Banknote className="h-4 w-4 text-green-600" />
             </div>
             <p className="text-xs text-muted-foreground">Efectivo</p>
-            <p className="text-xl font-bold">{formatCurrency(metrics.salesByCash)}</p>
+            <p className="text-xl font-bold">{formatCurrency(salesByCash)}</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-8 w-8 rounded-full bg-chart-2/10 flex items-center justify-center">
-                <CreditCard className="h-4 w-4 text-chart-2" />
-              </div>
+            <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center mb-2">
+              <CreditCard className="h-4 w-4 text-blue-600" />
             </div>
             <p className="text-xs text-muted-foreground">Transferencia</p>
-            <p className="text-xl font-bold">{formatCurrency(metrics.salesByTransfer)}</p>
+            <p className="text-xl font-bold">{formatCurrency(salesByTransfer)}</p>
           </CardContent>
         </Card>
-
-        {metrics.salesByOther > 0 && (
+        {salesByOther > 0 && (
           <Card className="col-span-2">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Otros metodos</p>
-                  <p className="text-lg font-bold">{formatCurrency(metrics.salesByOther)}</p>
-                </div>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Otros métodos</p>
+                <p className="text-lg font-bold">{formatCurrency(salesByOther)}</p>
               </div>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Top products */}
-      {metrics.topProducts.length > 0 && (
+      {/* Top 5 products */}
+      {(metrics?.topProducts?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Mas vendidos hoy
+              Top productos
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="flex flex-col gap-2">
-              {metrics.topProducts.map((product, index) => (
-                <div
-                  key={product.name}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-muted-foreground w-5">
-                      {index + 1}.
-                    </span>
-                    <span className="text-sm font-medium">{product.name}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {product.count} {product.count === 1 ? 'venta' : 'ventas'}
-                  </span>
+            {metrics!.topProducts.map((product, index) => (
+              <div
+                key={product.name}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-sm font-medium text-muted-foreground w-5 shrink-0">{index + 1}.</span>
+                  <span className="text-sm font-medium truncate">{product.name}</span>
                 </div>
-              ))}
-            </div>
+                <span className="text-sm text-muted-foreground shrink-0 ml-2">
+                  {product.count} {product.count === 1 ? 'venta' : 'ventas'}
+                </span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
 
-      {/* Low stock alerts */}
-      {metrics.lowStockProducts.length > 0 && (
-        <Card className="border-warning/30 bg-warning/5">
+      {/* Low stock */}
+      {(metrics?.lowStockProducts?.length ?? 0) > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50/50 dark:bg-yellow-900/10 dark:border-yellow-900/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-warning">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
               <AlertTriangle className="h-4 w-4" />
               Stock bajo
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="flex flex-col gap-2">
-              {metrics.lowStockProducts.slice(0, 5).map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between py-2 border-b border-warning/20 last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{product.name}</span>
-                  </div>
-                  <span className={cn(
-                    'text-xs font-medium px-2 py-0.5 rounded-full',
-                    getStockColor(product.stock)
-                  )}>
-                    {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
-                  </span>
+            {metrics!.lowStockProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center justify-between py-2 border-b border-yellow-200/50 dark:border-yellow-900/20 last:border-0"
+              >
+                <div className="flex items-center gap-3">
+                  <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm font-medium">{product.nombre}</span>
                 </div>
-              ))}
-            </div>
+                <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full shrink-0', getStockColor(product.stock))}>
+                  {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
+                </span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
+    </div>
+  )
+}
 
-      {/* Quick stats summary */}
-      <div className="text-center py-4">
-        <p className="text-xs text-muted-foreground">
-          {lastUpdated ? `Ultimo actualizado: ${lastUpdated}` : '\u00A0'}
-        </p>
-      </div>
+const MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+]
+
+export function DashboardContent() {
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+
+  const [selectedDate, setSelectedDate] = useState(todayStr)
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1)
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear())
+  const [activeTab, setActiveTab] = useState('today')
+
+  const years = useMemo(() =>
+    Array.from({ length: 5 }, (_, i) => today.getFullYear() - i),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
+
+  const dayQuery = useMemo(() => `date=${selectedDate}`, [selectedDate])
+  const monthQuery = useMemo(
+    () => `month=${selectedMonth}&year=${selectedYear}`,
+    [selectedMonth, selectedYear]
+  )
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Tabs defaultValue="today" onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="today">Hoy</TabsTrigger>
+          <TabsTrigger value="month">Mes</TabsTrigger>
+        </TabsList>
+
+        {/* ---- HOY ---- */}
+        <TabsContent value="today" className="mt-4 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+            />
+          </div>
+          <MetricsView queryString={dayQuery} />
+          
+        </TabsContent>
+
+        {/* ---- MES ---- */}
+        <TabsContent value="month" className="mt-4 flex flex-col gap-3">
+          <div className="flex gap-2">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              className="flex-1 px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+            >
+              {MONTHS.map((m, i) => (
+                <option key={i + 1} value={i + 1}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="w-24 px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+          <MetricsView queryString={monthQuery} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

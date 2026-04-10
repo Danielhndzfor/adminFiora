@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-// PUT actualizar estado de orden
-export async function PUT(
+// PATCH / PUT actualizar estatus de orden por ID de EstatusCatalogo
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -10,32 +10,25 @@ export async function PUT(
     const { id } = await params
     const ordenId = parseInt(id)
     const body = await request.json()
-    const { estatus } = body
+    const { idEstatus } = body
 
-    if (!estatus) {
-      return NextResponse.json({ error: 'estatus es requerido' }, { status: 400 })
-    }
-
-    // Validar estado válido
-    const estatusValidos = ['PENDIENTE', 'PAGADA', 'ENVIADA', 'ENTREGADA', 'CANCELADA']
-    if (!estatusValidos.includes(estatus)) {
-      return NextResponse.json(
-        { error: `Estatus debe ser uno de: ${estatusValidos.join(', ')}` },
-        { status: 400 }
-      )
+    if (!idEstatus) {
+      return NextResponse.json({ error: 'idEstatus es requerido' }, { status: 400 })
     }
 
     const orden = await prisma.orden.update({
       where: { id: ordenId },
-      data: { estatus },
+      data: { idEstatus },
       include: {
-        items: true,
-        metodoPago: true,
+        estatus: true,
       },
     })
 
-    return NextResponse.json(orden)
-  } catch (err) {
+    return NextResponse.json({ data: orden })
+  } catch (err: any) {
+    if (err.code === 'P2025') {
+      return NextResponse.json({ error: 'Orden no encontrada' }, { status: 404 })
+    }
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

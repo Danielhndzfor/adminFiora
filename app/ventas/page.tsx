@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/sonner'
 export default function VentasPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
-      <AppHeader title="Ventas" />
+      <AppHeader title="Vender" />
       <main className="px-4 py-4 max-w-lg mx-auto">
         <SalesContent />
       </main>

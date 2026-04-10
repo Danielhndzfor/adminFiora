@@ -6,6 +6,14 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from '@/components/ui/dialog'
 
 export default function IniciarSesion() {
     const router = useRouter()
@@ -13,6 +21,9 @@ export default function IniciarSesion() {
     const [cargando, setCargando] = useState(false)
     const [correo, setCorreo] = useState('')
     const [contrasena, setContrasena] = useState('')
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [dialogTitle, setDialogTitle] = useState('')
+    const [dialogMessage, setDialogMessage] = useState('')
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -28,7 +39,13 @@ export default function IniciarSesion() {
             const data = await res.json()
 
             if (!res.ok) {
-                toast.error(data.error || 'Error al iniciar sesión')
+                const message = data?.error || 'Error al iniciar sesión'
+                const code = data?.code ? ` (Código: ${data.code})` : ''
+                const full = message + code
+                toast.error(full)
+                setDialogTitle('Error al iniciar sesión')
+                setDialogMessage(full)
+                setDialogOpen(true)
                 return
             }
 
@@ -36,9 +53,18 @@ export default function IniciarSesion() {
             localStorage.setItem('usuario', JSON.stringify(data.usuario))
 
             toast.success('Sesión iniciada correctamente')
-            router.push('/dashboard')
-        } catch (err) {
-            toast.error('Error de conexión')
+            setDialogTitle('Sesión iniciada')
+            setDialogMessage('Has iniciado sesión correctamente.')
+            setDialogOpen(true)
+            // redirigir tras cerrar el diálogo o inmediatamente si prefieres
+            // router.push('/dashboard')
+        } catch (err: any) {
+            const code = err?.code ? ` (Código: ${err.code})` : ''
+            const full = 'Error de conexión' + code
+            toast.error(full)
+            setDialogTitle('Error de conexión')
+            setDialogMessage(full)
+            setDialogOpen(true)
         } finally {
             setCargando(false)
         }
@@ -122,7 +148,7 @@ export default function IniciarSesion() {
                     </Button>
                 </form>
 
-                <div className="mt-5 space-y-2 text-center text-sm">
+                {/* <div className="mt-5 space-y-2 text-center text-sm">
                     <a
                         href="/olvide-contrasena"
                         className="block transition-opacity hover:opacity-80"
@@ -140,13 +166,29 @@ export default function IniciarSesion() {
                             Regístrate
                         </a>
                     </p>
-                </div>
+                </div> */}
             </div>
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
+                    <DialogDescription>{dialogMessage}</DialogDescription>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button onClick={() => router.push('/dashboard')}>Aceptar</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Footer */}
             <p className="mt-8 text-xs" style={{ color: 'rgba(254,255,255,0.2)' }}>
                 © 2026 FIORA · Todos los derechos reservados
             </p>
+
+
         </div>
+
+
     )
 }

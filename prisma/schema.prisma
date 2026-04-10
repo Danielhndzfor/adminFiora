@@ -65,6 +65,8 @@ model EstatusCatalogo {
     actualizadoEn DateTime @updatedAt
 
     ordenes Orden[]
+    cambiosFrom CambioEstatusOrden[] @relation("estatusFrom")
+    cambiosTo   CambioEstatusOrden[] @relation("estatusTo")
 
     @@index([activo])
 }
@@ -126,7 +128,38 @@ model Producto {
     @@index([categoriaId])
 }
 
+model ItemOrden {
+    id          Int      @id @default(autoincrement())
+    ordenId     Int
+    productoId  Int
+    cantidad    Int
+    precioEn    Decimal  @db.Decimal(10, 2)
+    creadoEn    DateTime @default(now())
 
+    orden   Orden   @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+    producto Producto @relation(fields: [productoId], references: [id])
+
+    @@index([ordenId])
+    @@index([productoId])
+}
+
+// Historial de cambios de estado de órdenes
+model CambioEstatusOrden {
+    id              Int      @id @default(autoincrement())
+    ordenId         Int
+    estatusAnterior Int
+    estatusNuevo    Int
+    razon           String?  @db.Text
+    usuarioExterno  String?  @db.VarChar(100) // Para tracking de cambios manuales
+    creadoEn        DateTime @default(now())
+
+    orden        Orden            @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+    estatusFrom  EstatusCatalogo  @relation("estatusFrom", fields: [estatusAnterior], references: [id])
+    estatusTo    EstatusCatalogo  @relation("estatusTo", fields: [estatusNuevo], references: [id])
+
+    @@index([ordenId])
+    @@index([creadoEn])
+}
 
 model Orden {
     id               Int         @id @default(autoincrement())
@@ -143,24 +176,10 @@ model Orden {
     metodoPago    MetodoPagoCatalogo @relation(fields: [metodoPagoId], references: [id])
     estatus       EstatusCatalogo   @relation(fields: [idEstatus], references: [id])
     items         ItemOrden[]
+    cambiosEstatus CambioEstatusOrden[]
 
     @@index([numeroTicket])
     @@index([usuarioId])
     @@index([idEstatus])
     @@index([creadoEn])
-}
-
-model ItemOrden {
-    id          Int      @id @default(autoincrement())
-    ordenId     Int
-    productoId  Int
-    cantidad    Int
-    precioEn    Decimal  @db.Decimal(10, 2)
-    creadoEn    DateTime @default(now())
-
-    orden   Orden   @relation(fields: [ordenId], references: [id], onDelete: Cascade)
-    producto Producto @relation(fields: [productoId], references: [id])
-
-    @@index([ordenId])
-    @@index([productoId])
 }

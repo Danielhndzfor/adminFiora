@@ -18,7 +18,7 @@ interface Category {
     nombre: string
 }
 
-import { fetchCategorias } from '@/lib/categories'
+import { fetchCategorias, clearCategoriasCache } from '@/lib/categories'
 
 export function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
     const [nombre, setNombre] = useState('')
@@ -133,18 +133,45 @@ export function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!nombre.trim()) {
-            toast.error('Ingresa el nombre del producto')
+        // Validar imagen
+        if (!imagePreview && !imageBase64) {
+            toast.error('La imagen es obligatoria')
             return
         }
 
+        // Validar nombre
+        if (!nombre.trim()) {
+            toast.error('El nombre es obligatorio')
+            return
+        }
+
+        // Validar descripción
+        if (!descripcion.trim()) {
+            toast.error('La descripción es obligatoria')
+            return
+        }
+
+        // Validar categoría
+        if (!categoriaId) {
+            toast.error('Selecciona una categoría')
+            return
+        }
+
+        // Validar precio
         if (!precio || parseFloat(precio) <= 0) {
             toast.error('Ingresa un precio válido')
             return
         }
 
-        if (!categoriaId) {
-            toast.error('Selecciona una categoría')
+        // Validar stock
+        if (!stock || parseInt(stock) < 0) {
+            toast.error('El stock debe ser 0 o mayor')
+            return
+        }
+
+        // Validar palabras clave (mínimo 1)
+        if (keywords.length === 0) {
+            toast.error('Agrega al menos una palabra clave')
             return
         }
 
@@ -389,7 +416,7 @@ export function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
                                             <button
                                                 type="button"
                                                 onClick={() => removeKeyword(idx)}
-                                                className="opacity-60 hover:opacity-100 transition-opacity flex-shrink-0"
+                                                className="opacity-60 hover:opacity-100 transition-opacity shrink-0"
                                             >
                                                 <X className="h-2.5 w-2.5" />
                                             </button>
