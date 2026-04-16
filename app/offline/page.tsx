@@ -1,14 +1,22 @@
-'use client'
+"use client"
 
 import Image from 'next/image'
-import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function OfflinePage() {
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const reason = searchParams.get('reason') // 'auth' para errores de autenticación
-  
+  const [reason, setReason] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      setReason(params.get('reason'))
+    } catch (e) {
+      setReason(null)
+    }
+  }, [])
+
   const isAuthError = reason === 'auth'
 
   return (

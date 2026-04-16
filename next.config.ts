@@ -11,66 +11,66 @@ const withPWA = withPWAInit({
   reloadOnOnline: true,
   
   // Limpieza y actualización de caches
-  skipWaiting: false, // No saltear waiting - permitir que el usuario actualice
-  clientsClaim: true, // Reclamo de clientes en la instalación
+  // `skipWaiting` y `clientsClaim` deben ir dentro de `workboxOptions`.
   
-  runtimeCaching: [
-    // Cache de API - short-lived
-    {
-      urlPattern: /^(https?:)?\/api\/.*/i,
-      handler: "NetworkFirst" as const,
-      options: {
-        cacheName: "api-cache",
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 5 * 60, // 5 minutos
-        },
-        networkTimeoutSeconds: 5,
-      },
-    },
-    // Páginas HTML - network first, cache as fallback
-    {
-      urlPattern: /^(https?:)?\/(?!_next).*/i,
-      handler: "NetworkFirst" as const,
-      options: {
-        cacheName: "page-cache",
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 24 * 60 * 60, // 24 horas
-        },
-      },
-    },
-    // Assets estáticos - cache first
-    {
-      urlPattern: /^(https?:)?\/(_next|static).*/i,
-      handler: "CacheFirst" as const,
-      options: {
-        cacheName: "static-cache",
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
-        },
-      },
-    },
-    // Imágenes - cache first
-    {
-      urlPattern: /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i,
-      handler: "CacheFirst" as const,
-      options: {
-        cacheName: "image-cache",
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
-        },
-      },
-    },
-  ],
+  // Las reglas de caching específicas se delegan a `workboxOptions.runtimeCaching`.
 
   workboxOptions: {
     disableDevLogs: true,
     skipWaiting: false,
     clientsClaim: true,
     cleanupOutdatedCaches: true,
+    runtimeCaching: [
+      // Cache de API - short-lived
+      {
+        urlPattern: /^(https?:)?\/api\/.*/i,
+        handler: "NetworkFirst" as const,
+        options: {
+          cacheName: "api-cache",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 5 * 60, // 5 minutos
+          },
+          networkTimeoutSeconds: 5,
+        },
+      },
+      // Páginas HTML - network first, cache as fallback
+      {
+        urlPattern: /^(https?:)?\/(?!_next).*/i,
+        handler: "NetworkFirst" as const,
+        options: {
+          cacheName: "page-cache",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 24 * 60 * 60, // 24 horas
+          },
+        },
+      },
+      // Assets estáticos - cache first
+      {
+        urlPattern: /^(https?:)?\/(_next|static).*/i,
+        handler: "CacheFirst" as const,
+        options: {
+          cacheName: "static-cache",
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 7 días
+          },
+        },
+      },
+      // Imágenes - cache first
+      {
+        urlPattern: /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i,
+        handler: "CacheFirst" as const,
+        options: {
+          cacheName: "image-cache",
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 días
+          },
+        },
+      },
+    ],
   },
 
   fallbacks: {
