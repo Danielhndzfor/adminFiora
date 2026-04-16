@@ -71,6 +71,7 @@ export function InventoryContent() {
   const [previewImage, setPreviewImage] = useState<{ isOpen: boolean; url?: string; name?: string }>({ isOpen: false })
   const [swipeStart, setSwipeStart] = useState<{ x: number; productId: number | null }>({ x: 0, productId: null })
   const [swipeProduct, setSwipeProduct] = useState<number | null>(null)
+  const [globalStats, setGlobalStats] = useState<{ totalArticulos: number; totalStock: number }>({ totalArticulos: 0, totalStock: 0 })
 
   useEffect(() => {
     fetchCategorias().then(setCategories).catch(console.error)
@@ -112,12 +113,37 @@ export function InventoryContent() {
       setProducts(prev => (targetPage === 1 ? incoming : [...prev, ...incoming]))
       setHasMore(nextHasMore)
       setPage(targetPage)
+      
+      // Cargar stats globales al cambiar filtros (solo en primera página)
+      if (targetPage === 1) {
+        loadGlobalStats(palabra, catId, sf)
+      }
     } catch (error) {
       toast.error('Error cargando productos')
       console.error(error)
     } finally {
       if (targetPage === 1 && isInitial) setLoading(false)
       else if (targetPage > 1) setLoadingMore(false)
+    }
+  }
+
+  const loadGlobalStats = async (palabra = '', catId: number | null = null, sf: StockFilter = 'all') => {
+    try {
+      const params = new URLSearchParams()
+      if (palabra) params.set('palabra', palabra)
+      if (catId) params.set('categoriaId', String(catId))
+      if (sf === 'low') params.set('stockFiltro', 'bajo')
+      else if (sf === 'none') params.set('stockFiltro', 'cero')
+
+      const response = await fetch(`/api/products/stats?${params.toString()}`)
+      if (!response.ok) throw new Error('Error cargando stats')
+      const data = await response.json()
+      setGlobalStats({
+        totalArticulos: data.totalArticulos || 0,
+        totalStock: data.totalStock || 0,
+      })
+    } catch (error) {
+      console.error('Error loading stats:', error)
     }
   }
 
@@ -334,8 +360,8 @@ export function InventoryContent() {
       {/* ── STATS ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Artículos', value: products.length, color: 'text-[#092B2B]' },
-          { label: 'Total stock', value: products.reduce((s, p) => s + p.stock, 0), color: 'text-[#092B2B]' },
+          { label: 'Artículos', value: globalStats.totalArticulos, color: 'text-[#092B2B]' },
+          { label: 'Total stock', value: globalStats.totalStock, color: 'text-[#092B2B]' },
         ].map(s => (
           <div key={s.label} className="rounded-xl bg-white border border-[#092B2B]/15 py-3 px-4 shadow-sm text-center hover:border-[#092B2B]/30 transition-colors">
             <p className={cn('text-2xl font-bold leading-none tracking-tight', s.color)}>{s.value}</p>

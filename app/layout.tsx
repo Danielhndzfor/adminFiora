@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Merriweather } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
+import { PWAInitializer } from '@/components/pwa-initializer'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.variable} ${merri.variable} font-sans antialiased`}>
+        <PWAInitializer />
         <StoreProvider>
           {children}
           <Toaster position="top-center" />

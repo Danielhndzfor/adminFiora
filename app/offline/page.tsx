@@ -1,8 +1,16 @@
 'use client'
 
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export default function OfflinePage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const reason = searchParams.get('reason') // 'auth' para errores de autenticación
+  
+  const isAuthError = reason === 'auth'
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
@@ -21,23 +29,45 @@ export default function OfflinePage() {
         className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-6"
         style={{ backgroundColor: 'rgba(191,162,116,0.15)', border: '1px solid rgba(191,162,116,0.3)' }}
       >
-        📡
+        {isAuthError ? '🔐' : '📡'}
       </div>
 
       <h1 className="text-2xl font-semibold mb-2" style={{ color: '#feffff' }}>
-        Sin conexión
+        {isAuthError ? 'Sesión expirada' : 'Sin conexión'}
       </h1>
+      
       <p className="text-sm max-w-xs" style={{ color: 'rgba(254,255,255,0.5)' }}>
-        Verifica tu conexión a internet e intenta de nuevo. Las páginas que ya visitaste siguen disponibles.
+        {isAuthError 
+          ? 'Tu sesión ha expirado. Necesitas conectarte a internet para iniciar sesión nuevamente.'
+          : 'Verifica tu conexión a internet e intenta de nuevo. Las páginas que ya visitaste siguen disponibles.'
+        }
       </p>
 
       <button
-        onClick={() => window.location.reload()}
+        onClick={() => {
+          if (isAuthError) {
+            // Si es error de auth, ir a login
+            router.push('/iniciar-sesion')
+          } else {
+            // Si es offline, reintentar
+            window.location.reload()
+          }
+        }}
         className="mt-8 px-6 py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 active:opacity-80"
         style={{ backgroundColor: '#bfa274', color: '#092b2b' }}
       >
-        Reintentar
+        {isAuthError ? 'Ir a iniciar sesión' : 'Reintentar'}
       </button>
+
+      {isAuthError && (
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-6 py-2 rounded-xl font-semibold text-sm transition-opacity"
+          style={{ backgroundColor: 'rgba(191,162,116,0.1)', color: '#bfa274', border: '1px solid rgba(191,162,116,0.3)' }}
+        >
+          Reintentar conexión
+        </button>
+      )}
 
       <p className="mt-12 text-xs" style={{ color: 'rgba(254,255,255,0.2)' }}>
         © 2026 FIORA · Sistema de Joyería
