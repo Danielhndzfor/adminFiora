@@ -11,6 +11,31 @@ export function proxy(request: NextRequest) {
         null
     const { pathname } = request.nextUrl
 
+    // CORS: sólo para llamadas a /api/*
+    if (pathname.startsWith('/api/')) {
+        const allowOrigin = process.env.CORS_ALLOWED_ORIGINS || '*'
+        const allowMethods = 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+        const allowHeaders = 'Content-Type, Authorization'
+
+        if (request.method === 'OPTIONS') {
+            return new NextResponse(null, {
+                status: 204,
+                headers: {
+                    'Access-Control-Allow-Origin': allowOrigin,
+                    'Access-Control-Allow-Methods': allowMethods,
+                    'Access-Control-Allow-Headers': allowHeaders,
+                },
+            })
+        }
+
+        const res = NextResponse.next()
+        res.headers.set('Access-Control-Allow-Origin', allowOrigin)
+        res.headers.set('Access-Control-Allow-Methods', allowMethods)
+        res.headers.set('Access-Control-Allow-Headers', allowHeaders)
+
+        return res
+    }
+
     // Si está en la página raíz
     if (pathname === '/') {
         if (token) {
@@ -29,5 +54,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/', '/dashboard', '/admin', '/ventas', '/historial', '/inventario'],
+    matcher: ['/', '/dashboard', '/admin', '/ventas', '/historial', '/inventario', '/api/:path*'],
 }
