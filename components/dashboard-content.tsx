@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   TrendingUp, Banknote, CreditCard, Wallet,
   AlertTriangle, Package, Calendar, Receipt, ArrowUpRight,
@@ -226,24 +227,26 @@ export function DashboardContent() {
         {/* ---- MES ---- */}
         <TabsContent value="month" className="mt-4 flex flex-col gap-3">
           <div className="flex gap-2">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="flex-1 px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-            >
-              {MONTHS.map((m, i) => (
-                <option key={i + 1} value={i + 1}>{m}</option>
-              ))}
-            </select>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-24 px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
+            <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Selecciona mes" />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTHS.map((m, i) => (
+                  <SelectItem key={i + 1} value={(i + 1).toString()}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Año" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={y.toString()}>{y.toString()}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <MetricsView queryString={monthQuery} />
         </TabsContent>

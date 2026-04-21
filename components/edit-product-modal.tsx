@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { X, Trash2, Copy, Camera, Loader2, Tag, Plus } from 'lucide-react'
+import { X, Trash2, Copy, Camera, Loader2, Tag, Plus, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { ImagePreviewModal } from './image-preview-modal'
 
 interface Product {
   id: number
@@ -54,8 +55,9 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
   const [activo, setActivo] = useState(product.activo)
   const [categoriaId, setCategoriaId] = useState(product.categoriaId.toString())
   const [categorias, setCategorias] = useState<Category[]>([])
-  const [imagePreview, setImagePreview] = useState<string | null>(product.imagen || null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageBase64, setImageBase64] = useState<string | null>(null)
+  const [showImagePreview, setShowImagePreview] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -354,8 +356,28 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
                   </>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <Camera className="h-10 w-10 text-[#092B2B]/60" />
-                    <span className="text-sm font-medium text-[#092B2B]/70">Toca para cambiar foto</span>
+                    {product.imagen ? (
+                      <>
+                        <Eye className="h-10 w-10 text-[#092B2B]/60" />
+                        <span className="text-sm font-medium text-[#092B2B]/70">Ver imagen actual</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowImagePreview(true)
+                          }}
+                          className="mt-2 px-3 py-1 bg-[#092B2B]/10 hover:bg-[#092B2B]/20 rounded-lg text-xs font-medium text-[#092B2B] transition-colors"
+                        >
+                          👁️ Ver
+                        </button>
+                        <span className="text-xs text-[#092B2B]/50 mt-2">O toca para cambiar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="h-10 w-10 text-[#092B2B]/60" />
+                        <span className="text-sm font-medium text-[#092B2B]/70">Toca para cambiar foto</span>
+                      </>
+                    )}
                   </div>
                 )}
                 <input
@@ -568,6 +590,13 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
           </form>
         </div>
       </div>
+      
+      <ImagePreviewModal 
+        isOpen={showImagePreview}
+        onClose={() => setShowImagePreview(false)}
+        imageUrl={product.imagen || undefined}
+        productName={product.nombre}
+      />
     </div>
   )
 }

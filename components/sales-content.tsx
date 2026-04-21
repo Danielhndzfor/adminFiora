@@ -178,7 +178,7 @@ export function SalesContent() {
               onClick={() => handleAddToCart(product)}
               className="bg-white border border-[#092B2B]/25 rounded-xl shadow-sm overflow-hidden hover:shadow-lg hover:border-[#092B2B]/40 transition-all duration-200 flex flex-col cursor-pointer active:scale-95"
             >
-              {/* Imagen */}
+              {/* Imagen - Botón Ver Imagen */}
               <div
                 className="relative w-full aspect-square bg-[#092B2B]/5 flex items-center justify-center overflow-hidden group shrink-0"
                 onClick={(e) => {
@@ -186,10 +186,11 @@ export function SalesContent() {
                   setPreviewImage({ isOpen: true, url: product.imagen, name: product.nombre })
                 }}
               >
-                {product.imagen
-                  ? <img src={product.imagen} alt={product.nombre} className="w-full h-full object-cover" />
-                  : <Package className="h-16 w-16 text-[#092B2B]/15" />
-                }
+                {product.imagen ? (
+                  <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
+                ) : (
+                  <Package className="h-16 w-16 text-[#092B2B]/15" />
+                )}
                 {/* Badge de stock */}
                 <div className={cn(
                   'absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded-full leading-none',
@@ -198,7 +199,7 @@ export function SalesContent() {
                   {product.stock}
                 </div>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <Eye className="h-5 w-5 text-white drop-shadow" />
+                  <span className="text-xs font-bold text-white">VER</span>
                 </div>
               </div>
 

@@ -404,17 +404,18 @@ export function InventoryContent() {
                 'flex items-center gap-3 p-2.5 bg-white border border-[#092B2B]/25 rounded-xl shadow-md transition-all duration-200 hover:shadow-lg hover:border-[#092B2B]/40',
                 swipeProduct === product.id && '-translate-x-16'
               )}>
-                {/* Imagen */}
+                {/* Imagen - Botón Ver Imagen */}
                 <div
                   className="relative h-14 w-14 rounded-xl bg-[#092B2B]/5 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer group"
                   onClick={() => setPreviewImage({ isOpen: true, url: product.imagen, name: product.nombre })}
                 >
-                  {product.imagen
-                    ? <img src={product.imagen} alt={product.nombre} className="w-full h-full object-cover" />
-                    : <Package className="h-6 w-6 text-[#092B2B]/20" />
-                  }
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <Eye className="h-3.5 w-3.5 text-white" />
+                  {product.imagen ? (
+                    <Eye className="h-6 w-6 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
+                  ) : (
+                    <Package className="h-6 w-6 text-[#092B2B]/20" />
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="text-[10px] font-bold text-white">VER</span>
                   </div>
                 </div>
 
@@ -479,15 +480,16 @@ export function InventoryContent() {
               key={product.id}
               className="bg-white border border-[#092B2B]/25 rounded-2xl shadow-md overflow-hidden hover:shadow-lg hover:border-[#092B2B]/40 transition-all duration-200 flex flex-col"
             >
-              {/* Imagen */}
+              {/* Imagen - Botón Ver Imagen */}
               <div
                 className="relative w-full aspect-square bg-[#092B2B]/5 flex items-center justify-center overflow-hidden cursor-pointer group shrink-0"
                 onClick={() => setPreviewImage({ isOpen: true, url: product.imagen, name: product.nombre })}
               >
-                {product.imagen
-                  ? <img src={product.imagen} alt={product.nombre} className="w-full h-full object-cover" />
-                  : <Package className="h-20 w-20 text-[#092B2B]/15" />
-                }
+                {product.imagen ? (
+                  <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
+                ) : (
+                  <Package className="h-20 w-20 text-[#092B2B]/15" />
+                )}
                 {/* Badge de stock */}
                 <div className={cn(
                   'absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none',
@@ -496,7 +498,7 @@ export function InventoryContent() {
                   {product.stock}
                 </div>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <Eye className="h-5 w-5 text-white drop-shadow" />
+                  <span className="text-xs font-bold text-white">VER IMAGEN</span>
                 </div>
               </div>
 
