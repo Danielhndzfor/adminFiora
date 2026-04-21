@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
+import { getCorsHeaders } from "@/lib/cors-utils"
 
 /**
  * GET /api/catalogos/categorias/public
@@ -55,28 +56,20 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.json(categorias, {
-      headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
+      headers: getCorsHeaders("public"),
     })
   } catch (error) {
     console.error("Error fetching public categorías:", error)
     return NextResponse.json(
       { error: "Error al obtener categorías" },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders() }
     )
   }
 }
 
 export async function OPTIONS() {
-  return NextResponse.json(null, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
+  return new NextResponse(null, {
+    status: 200,
+    headers: getCorsHeaders(),
   })
 }

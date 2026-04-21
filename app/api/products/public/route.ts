@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getCorsHeaders } from "@/lib/cors-utils";
 
 /**
  * GET /api/products/public
@@ -103,31 +104,21 @@ export async function GET(req: NextRequest) {
         hasMore,
       },
       {
-        headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
+        headers: getCorsHeaders("short"),
       }
     );
   } catch (error) {
     console.error("Error fetching public products:", error);
     return NextResponse.json(
       { error: "Error fetching products" },
-      { status: 500, headers: {
-        "Access-Control-Allow-Origin": "*",
-      }}
+      { status: 500, headers: getCorsHeaders() }
     );
   }
 }
 
 export async function OPTIONS() {
-  return NextResponse.json(null, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
+  return new NextResponse(null, {
+    status: 200,
+    headers: getCorsHeaders(),
   })
 }
