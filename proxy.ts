@@ -13,25 +13,40 @@ export function proxy(request: NextRequest) {
 
     // CORS: sólo para llamadas a /api/*
     if (pathname.startsWith('/api/')) {
-        const allowOrigin = process.env.CORS_ALLOWED_ORIGINS || '*'
+        const allowOriginEnv = (process.env.CORS_ALLOWED_ORIGINS || '*').trim()
+        const requestOrigin = request.headers.get('origin') || ''
+
+        let allowOrigin = allowOriginEnv
+        if (allowOriginEnv === '*' && requestOrigin) {
+            allowOrigin = requestOrigin
+        } else if (allowOriginEnv !== '*' && requestOrigin) {
+            // allowOriginEnv can be a comma-separated list
+            const allowed = allowOriginEnv.split(',').map(s => s.trim())
+            if (allowed.includes(requestOrigin)) allowOrigin = requestOrigin
+        }
+
         const allowMethods = 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
         const allowHeaders = 'Content-Type, Authorization'
+        const allowCredentials = 'true'
+
+        const corsHeaders = {
+            'Access-Control-Allow-Origin': allowOrigin,
+            'Access-Control-Allow-Methods': allowMethods,
+            'Access-Control-Allow-Headers': allowHeaders,
+            'Access-Control-Allow-Credentials': allowCredentials,
+            'Vary': 'Origin',
+        }
 
         if (request.method === 'OPTIONS') {
             return new NextResponse(null, {
                 status: 204,
-                headers: {
-                    'Access-Control-Allow-Origin': allowOrigin,
-                    'Access-Control-Allow-Methods': allowMethods,
-                    'Access-Control-Allow-Headers': allowHeaders,
-                },
+                headers: corsHeaders,
             })
         }
 
         const res = NextResponse.next()
-        res.headers.set('Access-Control-Allow-Origin', allowOrigin)
-        res.headers.set('Access-Control-Allow-Methods', allowMethods)
-        res.headers.set('Access-Control-Allow-Headers', allowHeaders)
+        // Aplicar cabeceras CORS a la respuesta
+        Object.entries(corsHeaders).forEach(([k, v]) => res.headers.set(k, v))
 
         return res
     }
