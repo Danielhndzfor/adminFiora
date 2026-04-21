@@ -3,10 +3,8 @@
  * Centraliza la configuración de CORS para producción y desarrollo
  */
 
-import { NextResponse } from "next/server"
-
 export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "*", // Cambiar a dominio específico en producción: process.env.NEXT_PUBLIC_API_DOMAIN
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 }
@@ -30,36 +28,4 @@ export function getCorsHeaders(cacheType: "public" | "short" | "detail" = "publi
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   }
-}
-
-/**
- * Wrapper para respuestas JSON que garantiza CORS headers
- * Úsalo para envolver NextResponse.json() en tus endpoints
- */
-export function corsJsonResponse(
-  data: any,
-  status: number = 200,
-  cacheType: "public" | "short" | "detail" = "public"
-) {
-  return NextResponse.json(data, {
-    status,
-    headers: getCorsHeaders(cacheType),
-  })
-}
-
-/**
- * Wrapper para respuestas de error con CORS
- */
-export function corsErrorResponse(
-  message: string,
-  status: number = 500,
-  cacheType: "public" | "short" | "detail" = "public"
-) {
-  return NextResponse.json(
-    { error: message },
-    {
-      status,
-      headers: getCorsHeaders(cacheType),
-    }
-  )
 }

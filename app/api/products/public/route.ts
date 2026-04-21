@@ -117,8 +117,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
+  return NextResponse.json(null, {
     headers: getCorsHeaders(),
   })
 }
