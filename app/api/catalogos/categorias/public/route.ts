@@ -57,6 +57,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(categorias, {
       headers: {
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
       },
     })
   } catch (error) {
@@ -66,4 +69,14 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+export async function OPTIONS() {
+  return NextResponse.json(null, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  })
 }
