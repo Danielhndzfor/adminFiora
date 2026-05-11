@@ -166,12 +166,6 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validar imagen
-    if (!imagePreview && !imageBase64) {
-      toast.error('❌ La imagen es obligatoria')
-      return
-    }
-
     // Validar nombre
     if (!nombre.trim()) {
       toast.error('❌ El nombre es obligatorio')

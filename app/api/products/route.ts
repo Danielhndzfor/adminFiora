@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { generarCodigoProducto } from '@/lib/product-code-generator'
-import { uploadImageFromBase64 } from '@/lib/cloudinary'
+import { uploadImageLocal } from '@/lib/local-upload'
 import { verificarTokenJWT } from '@/lib/seguridad'
 
 /**
@@ -146,15 +146,11 @@ export async function POST(request: Request) {
     // Generar código automático
     const codigo = await generarCodigoProducto()
 
-    // Subir imagen a Cloudinary si existe
+    // Subir imagen localmente si existe
     let urlImagen = null
-    let publicIdImagen = null
     if (imagenBase64) {
-      const resultado = await uploadImageFromBase64(imagenBase64, {
-        folder: 'fiora/productos',
-      })
-      urlImagen = resultado.secure_url
-      publicIdImagen = resultado.public_id
+      const resultado = await uploadImageLocal(imagenBase64)
+      urlImagen = resultado.url
     }
 
     // Crear producto

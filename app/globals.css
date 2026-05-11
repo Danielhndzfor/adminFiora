@@ -5,6 +5,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Apply Inter font globally */
+html, body {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
 :root {
   /* FIORA - Forest Green Luxury Theme */
   --fiora-dark: #092b2b;
@@ -97,7 +102,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', sans-serif;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
   --font-serif: var(--font-merri);
   --color-fiora-dark: var(--fiora-dark);

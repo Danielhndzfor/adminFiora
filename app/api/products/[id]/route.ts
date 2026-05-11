@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { parseImagenesJSON } from '@/lib/image-handler'
+import { uploadImageLocal } from '@/lib/local-upload'
 import { verificarTokenJWT } from '@/lib/seguridad'
 
 /**
@@ -90,16 +91,6 @@ export async function PUT(
 
     // Si hay nueva imagen base64, procesarla
     if (imagenBase64) {
-      const sanitized = (productoActual.codigo || 'img')
-        .replace(/[^a-zA-Z0-9-_]/g, '_')
-        .toLowerCase()
-        .slice(0, 50)
-
-      // Obtener extensión del base64
-      const matches = imagenBase64.match(/data:image\/(\w+);base64/)
-      const ext = matches ? matches[1].toLowerCase() : 'jpg'
-
-      // Generar nombre
       const imagenesActuales = parseImagenesJSON((productoActual as any).imagenes)
       const nuevoOrden = imagenesActuales.length + 1
 
@@ -110,13 +101,13 @@ export async function PUT(
         )
       }
 
-      const filename = `${sanitized}_${nuevoOrden}.${ext}`
-      const newImageUrl = `https://sad-diffie.198-251-78-127.plesk.page/fioraImages/${filename}`
+      // Subir imagen localmente
+      const resultado = await uploadImageLocal(imagenBase64)
 
-      // Agregr a array
+      // Agregar a array
       imagenesActuales.push({
-        url: newImageUrl,
-        nombreArchivo: filename,
+        url: resultado.url,
+        nombreArchivo: resultado.nombreArchivo,
         orden: nuevoOrden,
         creadoEn: new Date().toISOString(),
       })
