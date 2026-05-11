@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { parseImagenesJSON } from '@/lib/image-handler'
-import { uploadImageLocal } from '@/lib/local-upload'
+import { uploadImageLocal, reorganizeImages } from '@/lib/local-upload'
 import { verificarTokenJWT } from '@/lib/seguridad'
 
 /**
@@ -92,28 +92,41 @@ export async function PUT(
     // Si hay nueva imagen base64, procesarla
     if (imagenBase64) {
       const imagenesActuales = parseImagenesJSON((productoActual as any).imagenes)
-      const nuevoOrden = imagenesActuales.length + 1
+      
+      // Si viene con reemplaceIndex, reemplazar esa imagen
+      const reemplaceIndex = (body as any).reemplaceIndex ?? -1
+      
+      if (reemplaceIndex >= 0 && reemplaceIndex < imagenesActuales.length) {
+        // Reemplazar imagen existente
+        const nuevoIndice = reemplaceIndex
+        const resultado = await uploadImageLocal(imagenBase64, productoActual.codigo, nuevoIndice)
+        
+        imagenesActuales[reemplaceIndex] = {
+          url: resultado.url,
+          nombreArchivo: resultado.nombreArchivo,
+          orden: reemplaceIndex + 1,
+          creadoEn: new Date().toISOString(),
+        }
+      } else {
+        // Agregar nueva imagen
+        const nuevoIndice = imagenesActuales.length
 
-      if (nuevoOrden > 5) {
-        return NextResponse.json(
-          { error: 'Máximo 5 imágenes por producto' },
-          { status: 400 }
-        )
+        if (nuevoIndice >= 5) {
+          return NextResponse.json(
+            { error: 'Máximo 5 imágenes por producto' },
+            { status: 400 }
+          )
+        }
+
+        const resultado = await uploadImageLocal(imagenBase64, productoActual.codigo, nuevoIndice)
+
+        imagenesActuales.push({
+          url: resultado.url,
+          nombreArchivo: resultado.nombreArchivo,
+          orden: nuevoIndice + 1,
+          creadoEn: new Date().toISOString(),
+        })
       }
-
-      // Subir imagen localmente con código del producto
-      const resultado = await uploadImageLocal(imagenBase64, {
-        codigoProducto: productoActual.codigo,
-        numeroImagen: nuevoOrden - 1, // 0-based index
-      })
-
-      // Agregar a array
-      imagenesActuales.push({
-        url: resultado.url,
-        nombreArchivo: resultado.nombreArchivo,
-        orden: nuevoOrden,
-        creadoEn: new Date().toISOString(),
-      })
 
       imagenesActualizadas = JSON.stringify(imagenesActuales)
     }
@@ -121,6 +134,28 @@ export async function PUT(
     // Si se proporciona array completo (reorden/eliminación)
     if (imagenes && Array.isArray(imagenes)) {
       imagenesActualizadas = JSON.stringify(imagenes)
+    }
+
+    // Si se pasa deleteImageIndex, eliminar esa imagen y reorganizar
+    const deleteImageIndex = (body as any).deleteImageIndex ?? -1
+    if (deleteImageIndex >= 0) {
+      const imagenesActuales = parseImagenesJSON((productoActual as any).imagenes)
+      if (deleteImageIndex < imagenesActuales.length) {
+        // Reorganizar archivos en el servidor
+        await reorganizeImages(productoActual.codigo, deleteImageIndex)
+        
+        // Actualizar array de imágenes
+        imagenesActuales.splice(deleteImageIndex, 1)
+        
+        // Actualizar URLs después de reorganizar
+        for (let i = deleteImageIndex; i < imagenesActuales.length; i++) {
+          imagenesActuales[i].url = `/uploads/productos/${productoActual.codigo}/imagen_${i}.jpg`
+          imagenesActuales[i].nombreArchivo = `imagen_${i}.jpg`
+          imagenesActuales[i].orden = i + 1
+        }
+        
+        imagenesActualizadas = JSON.stringify(imagenesActuales)
+      }
     }
 
     // Construir objeto data como any para evitar errores de tipos del cliente Prisma
@@ -167,7 +202,8 @@ export async function DELETE(
   try {
     const { id } = await params
     const productoId = parseInt(id)
-    const { orden } = await request.json() // orden de la imagen a eliminar
+    const body = await request.json()
+    const { orden } = body
 
     const producto = await prisma.producto.findUnique({
       where: { id: productoId },
@@ -183,24 +219,49 @@ export async function DELETE(
         where: { id: productoId },
         data: { activo: false },
       })
-      return NextResponse.json({ mensaje: 'Producto desactivado', producto: actualizado })
+      return NextResponse.json({ 
+        mensaje: 'Producto desactivado', 
+        producto: actualizado 
+      })
     }
 
-    // Eliminar imagen específica del array
+    // Eliminar imagen específica y reorganizar
     const imagenesActuales = parseImagenesJSON((producto as any).imagenes)
-    const imagenesFiltradas = imagenesActuales.filter(img => img.orden !== orden)
+    const indexAEliminar = imagenesActuales.findIndex(img => img.orden === orden)
+
+    if (indexAEliminar < 0) {
+      return NextResponse.json(
+        { error: 'Imagen no encontrada' },
+        { status: 404 }
+      )
+    }
+
+    // Reorganizar archivos en el sistema de archivos
+    const archivosRestantes = await reorganizeImages(producto.codigo, indexAEliminar)
+    console.log(`📊 Archivos restantes después de eliminar imagen ${indexAEliminar}:`, archivosRestantes)
+
+    // Actualizar array de imágenes
+    imagenesActuales.splice(indexAEliminar, 1)
+    
+    // Recalcular orden y URLs después de reorganizar
+    for (let i = 0; i < imagenesActuales.length; i++) {
+      imagenesActuales[i].url = `/uploads/productos/${producto.codigo}/imagen_${i}.jpg`
+      imagenesActuales[i].nombreArchivo = `imagen_${i}.jpg`
+      imagenesActuales[i].orden = i + 1
+    }
 
     const actualizado = await prisma.producto.update({
       where: { id: productoId },
-      data: { imagenes: JSON.stringify(imagenesFiltradas) } as any,
+      data: { imagenes: JSON.stringify(imagenesActuales) } as any,
     })
 
     return NextResponse.json({
-      mensaje: 'Imagen eliminada',
+      mensaje: 'Imagen eliminada y reorganizada',
       producto: actualizado,
       imagenesArray: parseImagenesJSON((actualizado as any).imagenes),
     })
   } catch (err) {
+    console.error('❌ Error en DELETE:', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

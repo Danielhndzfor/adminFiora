@@ -146,20 +146,24 @@ export async function POST(request: Request) {
     // Generar código automático PRIMERO
     const codigo = await generarCodigoProducto()
 
-    // Subir imagen localmente si existe (con código del producto para nombre)
+    // Subir imagen localmente si existe
     let urlImagen = null
+    let nombreArchivo = ''
     if (imagenBase64) {
-      const resultado = await uploadImageLocal(imagenBase64, {
-        codigoProducto: codigo,
-        numeroImagen: 0, // Primera imagen
-      })
+      const resultado = await uploadImageLocal(imagenBase64, codigo, 0)
       urlImagen = resultado.url
+      nombreArchivo = resultado.nombreArchivo
     }
 
-    // Crear producto
+    // Crear producto con imágenes
     const imagenesPayload = urlImagen
       ? JSON.stringify([
-          { url: urlImagen, nombreArchivo: '', orden: 1, creadoEn: new Date().toISOString() },
+          {
+            url: urlImagen,
+            nombreArchivo: nombreArchivo,
+            orden: 1,
+            creadoEn: new Date().toISOString(),
+          },
         ])
       : undefined
 

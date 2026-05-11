@@ -24,14 +24,23 @@ async function ensureProductUploadDir(codigoProducto: string) {
 }
 
 /**
+ * Obtiene el directorio del producto
+ */
+function getProductDir(codigoProducto: string): string {
+  return path.join(UPLOAD_BASE_DIR, codigoProducto)
+}
+
+/**
  * Sube una imagen desde base64 al almacenamiento local
- * @param base64Data - Datos base64 de la imagen (ej: "data:image/jpeg;base64,...")
- * @param options - Opciones { codigoProducto, numeroImagen }
- * @returns Objeto con url e información de la imagen
+ * @param base64Data - Datos base64 de la imagen
+ * @param codigoProducto - Código del producto
+ * @param numeroImagen - Número de imagen (para nombrar el archivo)
+ * @returns Objeto con url e información
  */
 export async function uploadImageLocal(
   base64Data: string,
-  options: { codigoProducto?: string; numeroImagen?: number } = {}
+  codigoProducto: string,
+  numeroImagen: number
 ) {
   try {
     // Validar formato base64
@@ -43,21 +52,11 @@ export async function uploadImageLocal(
     const [, fileType, base64String] = matches
     const ext = fileType.toLowerCase() === 'jpeg' ? 'jpg' : fileType.toLowerCase()
 
-    // Generar nombre: imagen_{numeroImagen}.{ext}
-    let filename: string
-    let uploadDir: string
+    // Crear directorio si no existe
+    const uploadDir = await ensureProductUploadDir(codigoProducto)
     
-    if (options.codigoProducto && options.numeroImagen !== undefined) {
-      uploadDir = await ensureProductUploadDir(options.codigoProducto)
-      filename = `imagen_${options.numeroImagen}.${ext}`
-    } else {
-      // Fallback para uploads sin código de producto
-      uploadDir = UPLOAD_BASE_DIR
-      await fs.mkdir(uploadDir, { recursive: true })
-      const timestamp = Date.now()
-      const random = crypto.randomBytes(4).toString('hex')
-      filename = `${timestamp}_${random}.${ext}`
-    }
+    // Generar nombre: imagen_{numero}.{ext}
+    const filename = `imagen_${numeroImagen}.${ext}`
 
     // Convertir base64 a buffer
     const imageBuffer = Buffer.from(base64String, 'base64')
@@ -67,12 +66,9 @@ export async function uploadImageLocal(
     await fs.writeFile(filePath, imageBuffer)
 
     // Generar URL pública
-    let publicUrl: string
-    if (options.codigoProducto) {
-      publicUrl = `/uploads/productos/${options.codigoProducto}/${filename}`
-    } else {
-      publicUrl = `/uploads/productos/${filename}`
-    }
+    const publicUrl = `/uploads/productos/${codigoProducto}/${filename}`
+
+    console.log(`✓ Imagen guardada: ${publicUrl}`)
 
     return {
       url: publicUrl,
@@ -84,6 +80,65 @@ export async function uploadImageLocal(
     const message = error instanceof Error ? error.message : 'Error al guardar imagen'
     console.error('❌ Error uploading image locally:', message)
     throw new Error(`Error al guardar imagen: ${message}`)
+  }
+}
+
+/**
+ * Reorganiza imágenes después de eliminar una
+ * Renombra imagen_1.jpg, imagen_2.jpg a imagen_0.jpg, imagen_1.jpg etc
+ * @param codigoProducto - Código del producto
+ * @param imagenAEliminar - Número de imagen a eliminar (0-based)
+ * @returns Array de archivos que quedan después de reorganizar
+ */
+export async function reorganizeImages(codigoProducto: string, imagenAEliminar: number) {
+  try {
+    const productDir = getProductDir(codigoProducto)
+
+    // Obtener lista de archivos
+    const files = await fs.readdir(productDir)
+    const imageFiles = files.filter((f) => f.match(/^imagen_\d+\.(jpg|png|jpeg|webp)$/))
+
+    if (imageFiles.length === 0) {
+      // Carpeta vacía, eliminarla
+      try {
+        await fs.rmdir(productDir)
+        console.log(`✓ Carpeta eliminada: ${productDir}`)
+      } catch {
+        // Ignorar si no está vacía
+      }
+      return []
+    }
+
+    // Renombrar archivos para mantener secuencia 0, 1, 2...
+    const nuevoIndice: { [key: number]: number } = {}
+    let contador = 0
+
+    for (let i = 0; i < imageFiles.length; i++) {
+      if (i !== imagenAEliminar) {
+        nuevoIndice[i] = contador
+        contador++
+      }
+    }
+
+    // Renombrar archivos
+    for (const [oldIndex, newIndex] of Object.entries(nuevoIndice)) {
+      const oldFile = imageFiles[parseInt(oldIndex)]
+      const ext = oldFile.split('.').pop()
+      const oldPath = path.join(productDir, oldFile)
+      const newPath = path.join(productDir, `imagen_${newIndex}.${ext}`)
+
+      if (oldPath !== newPath) {
+        await fs.rename(oldPath, newPath)
+        console.log(`✓ Renombrado: ${oldFile} → imagen_${newIndex}.${ext}`)
+      }
+    }
+
+    // Retornar lista de nuevos archivos
+    const filesAfter = await fs.readdir(productDir)
+    return filesAfter.filter((f) => f.match(/^imagen_\d+\.(jpg|png|jpeg|webp)$/))
+  } catch (error) {
+    console.error('❌ Error reorganizando imágenes:', error)
+    throw error
   }
 }
 

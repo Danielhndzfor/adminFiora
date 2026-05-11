@@ -38,24 +38,17 @@ export default function MigratePage() {
         const debugData = await debugResponse.json()
         setDebugInfo(debugData)
 
-        const response = await fetch('/api/products', {
-          credentials: 'include',
-        })
+        // Usar endpoint público para migración (sin requerir token)
+        const response = await fetch('/api/migrate/products-to-migrate')
 
         if (!response.ok) {
-          toast.error('Error cargando productos')
+          const error = await response.json()
+          toast.error(error.error || 'Error cargando productos')
           return
         }
 
         const data = await response.json()
-        const productosConImagenes = data.productos.filter((p: Producto) => {
-          try {
-            const imagenes = JSON.parse(p.imagenes || '[]') as ImagenData[]
-            return imagenes.length > 0 && imagenes[0].url?.startsWith('https://res.cloudinary.com')
-          } catch {
-            return false
-          }
-        })
+        const productosConImagenes = data.productos || []
 
         setProductos(productosConImagenes)
         
@@ -64,6 +57,7 @@ export default function MigratePage() {
           setProductoPrueba(productosConImagenes[0])
         }
       } catch (error) {
+        console.error('Error cargando productos:', error)
         toast.error('Error cargando productos')
       } finally {
         setLoading(false)
