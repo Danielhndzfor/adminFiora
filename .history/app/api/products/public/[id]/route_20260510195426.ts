@@ -107,7 +107,7 @@ export async function GET(
         descripcion: producto.descripcion,
         precio: producto.precio,
         costo: producto.costo,
-        imagenes: producto.imagen,
+        imagenes: producto.imagenes,
         stock: producto.stock,
         disponible: producto.stock > 0,
         palabrasClave: producto.palabrasClave,
