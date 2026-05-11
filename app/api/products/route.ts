@@ -71,7 +71,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ productos, hasMore })
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    const errorMessage = err instanceof Error ? err.message : String(err)
+    const errorStack = err instanceof Error ? err.stack : ''
+    console.error('❌ GET /api/products error:', { errorMessage, errorStack })
+    return NextResponse.json(
+      { 
+        error: errorMessage,
+        detail: process.env.NODE_ENV === 'development' ? errorStack : undefined
+      }, 
+      { status: 500 }
+    )
   }
 }
 

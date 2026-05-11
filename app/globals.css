@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import "tw-animate-css";
@@ -97,7 +99,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter);
+  --font-sans: 'Inter', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
   --font-serif: var(--font-merri);
   --color-fiora-dark: var(--fiora-dark);
