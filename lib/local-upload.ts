@@ -3,18 +3,22 @@ import path from 'path'
 import crypto from 'crypto'
 
 /**
- * Directorio de almacenamiento local para imágenes
+ * Directorio base de almacenamiento local para imágenes
+ * Estructura: /public/uploads/productos/{CODIGO-PRODUCTO}/imagen_{numero}.jpg
  */
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'productos')
+const UPLOAD_BASE_DIR = path.join(process.cwd(), 'public', 'uploads', 'productos')
 
 /**
- * Garantiza que el directorio existe
+ * Garantiza que el directorio para un producto existe
+ * @param codigoProducto - Código del producto (ej: "ORO-001")
  */
-async function ensureUploadDir() {
+async function ensureProductUploadDir(codigoProducto: string) {
   try {
-    await fs.mkdir(UPLOAD_DIR, { recursive: true })
+    const productDir = path.join(UPLOAD_BASE_DIR, codigoProducto)
+    await fs.mkdir(productDir, { recursive: true })
+    return productDir
   } catch (error) {
-    console.error('Error creating upload directory:', error)
+    console.error('Error creating product upload directory:', error)
     throw new Error('No se pudo crear directorio de almacenamiento')
   }
 }
@@ -30,8 +34,6 @@ export async function uploadImageLocal(
   options: { codigoProducto?: string; numeroImagen?: number } = {}
 ) {
   try {
-    await ensureUploadDir()
-
     // Validar formato base64
     const matches = base64Data.match(/data:image\/(\w+);base64,(.+)/)
     if (!matches) {
@@ -41,12 +43,17 @@ export async function uploadImageLocal(
     const [, fileType, base64String] = matches
     const ext = fileType.toLowerCase() === 'jpeg' ? 'jpg' : fileType.toLowerCase()
 
-    // Generar nombre: {codigoProducto}_{numeroImagen}.{ext} o timestamp si no hay código
+    // Generar nombre: imagen_{numeroImagen}.{ext}
     let filename: string
+    let uploadDir: string
+    
     if (options.codigoProducto && options.numeroImagen !== undefined) {
-      filename = `${options.codigoProducto}_${options.numeroImagen}.${ext}`
+      uploadDir = await ensureProductUploadDir(options.codigoProducto)
+      filename = `imagen_${options.numeroImagen}.${ext}`
     } else {
       // Fallback para uploads sin código de producto
+      uploadDir = UPLOAD_BASE_DIR
+      await fs.mkdir(uploadDir, { recursive: true })
       const timestamp = Date.now()
       const random = crypto.randomBytes(4).toString('hex')
       filename = `${timestamp}_${random}.${ext}`
@@ -56,11 +63,16 @@ export async function uploadImageLocal(
     const imageBuffer = Buffer.from(base64String, 'base64')
 
     // Guardar archivo
-    const filePath = path.join(UPLOAD_DIR, filename)
+    const filePath = path.join(uploadDir, filename)
     await fs.writeFile(filePath, imageBuffer)
 
     // Generar URL pública
-    const publicUrl = `/uploads/productos/${filename}`
+    let publicUrl: string
+    if (options.codigoProducto) {
+      publicUrl = `/uploads/productos/${options.codigoProducto}/${filename}`
+    } else {
+      publicUrl = `/uploads/productos/${filename}`
+    }
 
     return {
       url: publicUrl,
@@ -98,22 +110,32 @@ export async function deleteImageLocal(filename: string) {
 }
 
 /**
- * Obtiene la ruta pública de una imagen
+ * Elimina una imagen del almacenamiento local
+ * @param codigoProducto - Código del producto
+ * @param filename - Nombre del archivo a eliminar
  */
-export function getImageUrl(filename: string): string {
-  return `/uploads/productos/${filename}`
+export async function deleteImageLocal(codigoProducto: string, filename: string) {
+  try {
+    const filePath = path.join(UPLOAD_BASE_DIR, codigoProducto, filename)
+    
+    // Verificar que el archivo está en el directorio correcto
+    const productDir = path.join(UPLOAD_BASE_DIR, codigoProducto)
+    if (!filePath.startsWith(productDir)) {
+      throw new Error('Ruta de archivo no válida')
+    }
+
+    await fs.unlink(filePath)
+    console.log(`✓ Imagen eliminada: ${codigoProducto}/${filename}`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error al eliminar imagen'
+    console.error('❌ Error deleting image:', message)
+    // No lanzar error, solo registrar
+  }
 }
 
 /**
- * Genera nombre de archivo para migración
- * @param codigoProducto - Código del producto (ej: "ORO-001")
- * @param numeroImagen - Índice de la imagen (0, 1, 2...)
- * @param extension - Extensión del archivo (jpg, png, etc)
+ * Obtiene la ruta pública de una imagen
  */
-export function generateLocalFilename(
-  codigoProducto: string,
-  numeroImagen: number,
-  extension: string = 'jpg'
-): string {
-  return `${codigoProducto}_${numeroImagen}.${extension}`
+export function getImageUrl(codigoProducto: string, filename: string): string {
+  return `/uploads/productos/${codigoProducto}/${filename}`
 }

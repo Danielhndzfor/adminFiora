@@ -5,17 +5,18 @@ import prisma from '@/lib/prisma'
 
 /**
  * Script para migrar imágenes de Cloudinary a almacenamiento local
- * Uso: node prisma/migrate-images.ts
+ * Estructura: /public/uploads/productos/{CODIGO-PRODUCTO}/imagen_{numero}.jpg
+ * Uso: npx ts-node scripts/migrate-cloudinary-to-local.ts
  * 
  * ⚠️ IMPORTANTE: Solo ejecutar UNA VEZ en producción
  */
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'productos')
+const UPLOAD_BASE_DIR = path.join(process.cwd(), 'public', 'uploads', 'productos')
 
 /**
  * Descarga una imagen desde una URL
  */
-async function downloadImage(url: string, filename: string): Promise<boolean> {
+async function downloadImage(url: string, filePath: string): Promise<boolean> {
   return new Promise((resolve) => {
     https
       .get(url, async (response) => {
@@ -26,23 +27,26 @@ async function downloadImage(url: string, filename: string): Promise<boolean> {
         }
 
         try {
-          const filePath = path.join(UPLOAD_DIR, filename)
-          const writeStream = await fs.open(filePath, 'w')
-          
-          response.pipe(writeStream as any)
-          
-          response.on('end', () => {
-            writeStream.close()
-            console.log(`✓ Descargada: ${filename}`)
-            resolve(true)
+          const chunks: Buffer[] = []
+          response.on('data', (chunk) => chunks.push(chunk))
+          response.on('end', async () => {
+            try {
+              const imageBuffer = Buffer.concat(chunks)
+              await fs.writeFile(filePath, imageBuffer)
+              console.log(`  ✓ Descargada: ${path.basename(filePath)}`)
+              resolve(true)
+            } catch (error) {
+              console.error(`❌ Error guardando archivo:`, error)
+              resolve(false)
+            }
           })
         } catch (error) {
-          console.error(`❌ Error guardando ${filename}:`, error)
+          console.error(`❌ Error procesando respuesta:`, error)
           resolve(false)
         }
       })
       .on('error', (error) => {
-        console.error(`❌ Error en descarga de ${url}:`, error)
+        console.error(`❌ Error en descarga:`, error)
         resolve(false)
       })
   })
@@ -50,30 +54,10 @@ async function downloadImage(url: string, filename: string): Promise<boolean> {
 
 /**
  * Genera nombre de archivo usando código de producto
- * Formato: {CODIGO-PRODUCTO}_{NUMERO-IMAGEN}.jpg
- * Ejemplo: ORO-001_0.jpg, ORO-001_1.jpg
+ * Formato: imagen_{numero}.jpg
  */
-function generateFilename(codigoProducto: string, index: number): string {
-  return `${codigoProducto}_${index}.jpg`
-}
-
-/**
- * Extrae extensión de una URL (fallback a jpg)
- */
-function getExtension(url: string): string {
-  try {
-    const ext = url.split('.').pop()?.split('?')[0] || 'jpg'
-    return ['jpg', 'jpeg', 'png', 'webp'].includes(ext.toLowerCase()) ? ext.toLowerCase() : 'jpg'
-  } catch {
-    return 'jpg'
-  }
-}
-
-/**
- * Convierte URL de Cloudinary a local
- */
-function convertUrlToLocal(newFilename: string): string {
-  return `/uploads/productos/${newFilename}`
+function generateFilename(index: number): string {
+  return `imagen_${index}.jpg`
 }
 
 /**
@@ -83,9 +67,9 @@ async function migrateProducts() {
   console.log('🔄 Iniciando migración de imágenes...\n')
 
   try {
-    // Garantizar que existe el directorio
-    await fs.mkdir(UPLOAD_DIR, { recursive: true })
-    console.log(`📁 Directorio: ${UPLOAD_DIR}\n`)
+    // Garantizar que existe el directorio base
+    await fs.mkdir(UPLOAD_BASE_DIR, { recursive: true })
+    console.log(`📁 Directorio base: ${UPLOAD_BASE_DIR}\n`)
 
     // Obtener todos los productos con imágenes
     const productos = await prisma.producto.findMany({
@@ -109,7 +93,11 @@ async function migrateProducts() {
           continue
         }
 
-        console.log(`\n📦 Producto: ${producto.nombre} (Código: ${producto.codigo}) - ${imagenesList.length} imágenes`)
+        console.log(`📦 Producto: ${producto.nombre} (Código: ${producto.codigo}) - ${imagenesList.length} imágenes`)
+
+        // Crear directorio para este producto
+        const productDir = path.join(UPLOAD_BASE_DIR, producto.codigo)
+        await fs.mkdir(productDir, { recursive: true })
 
         // Descargar y migrar cada imagen
         for (let i = 0; i < imagenesList.length; i++) {
@@ -122,14 +110,17 @@ async function migrateProducts() {
             continue
           }
 
-          const newFilename = generateFilename(producto.codigo, i)
-          console.log(`  ⬇️  Descargando: ${cloudinaryUrl.substring(0, 60)}...`)
+          const newFilename = generateFilename(i)
+          const filePath = path.join(productDir, newFilename)
+          
+          console.log(`  ⬇️  Descargando imagen ${i + 1}/${imagenesList.length}...`)
 
-          const success = await downloadImage(cloudinaryUrl, newFilename)
+          const success = await downloadImage(cloudinaryUrl, filePath)
 
           if (success) {
             // Actualizar la URL en memoria
-            imagenesList[i].url = convertUrlToLocal(newFilename)
+            const newUrl = `/uploads/productos/${producto.codigo}/${newFilename}`
+            imagenesList[i].url = newUrl
             imagenesList[i].nombreArchivo = newFilename
             migratedCount++
           } else {
@@ -145,18 +136,19 @@ async function migrateProducts() {
           },
         })
 
-        console.log(`  ✅ Actualizado en BD`)
+        console.log(`  ✅ Actualizado en BD\n`)
       } catch (error) {
         console.error(`  ❌ Error procesando producto ${producto.id}:`, error)
         errorCount++
       }
     }
 
-    console.log(`\n${'='.repeat(50)}`)
+    console.log(`\n${'='.repeat(60)}`)
     console.log(`\n✅ MIGRACIÓN COMPLETADA`)
     console.log(`   - Imágenes migradas: ${migratedCount}`)
     console.log(`   - Errores: ${errorCount}`)
-    console.log(`   - Almacenamiento: ${UPLOAD_DIR}\n`)
+    console.log(`   - Almacenamiento: ${UPLOAD_BASE_DIR}`)
+    console.log(`   - Estructura: /uploads/productos/{CODIGO}/imagen_{numero}.jpg\n`)
   } catch (error) {
     console.error('❌ Error en migración:', error)
     process.exit(1)
