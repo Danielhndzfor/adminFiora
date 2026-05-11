@@ -117,6 +117,12 @@ export async function POST(request: Request) {
     }
 
     // Crear producto
+    const imagenesPayload = urlImagen
+      ? JSON.stringify([
+          { url: urlImagen, nombreArchivo: '', orden: 1, creadoEn: new Date().toISOString() },
+        ])
+      : undefined
+
     const producto = await prisma.producto.create({
       data: {
         codigo,
@@ -126,7 +132,7 @@ export async function POST(request: Request) {
         precio: parseFloat(precio),
         costo: costo ? parseFloat(costo) : undefined,
         stock: parseInt(stock),
-        imagenes: urlImagen || undefined,
+        imagenes: imagenesPayload,
         categoriaId,
       },
       include: { categoria: true },

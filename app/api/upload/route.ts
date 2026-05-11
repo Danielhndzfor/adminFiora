@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         data: {
           codigo,
           nombre: name ?? 'Sin nombre',
-          imagenes: productImagen,
+          imagen: productImagen,
           precio: 0,
           categoriaId: 1,
         } as any,

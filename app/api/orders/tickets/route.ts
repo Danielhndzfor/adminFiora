@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import type { Orden, ItemOrden, Producto, Usuario } from '@prisma/client'
+import { parseImagenesJSON } from '@/lib/image-handler'
 
 export async function GET(request: NextRequest) {
   try {
@@ -73,13 +74,13 @@ export async function GET(request: NextRequest) {
           },
         },
         items: {
-          include: {
+            include: {
             producto: {
               select: {
                 id: true,
                 nombre: true,
                 codigo: true,
-                imagen: true,
+                imagenes: true,
                 precio: true,
               },
             },
@@ -116,7 +117,10 @@ export async function GET(request: NextRequest) {
         orderId: item.ordenId,
         productId: item.productoId,
         productName: item.producto.nombre,
-        productImage: item.producto.imagen || '/products/default.jpg',
+        productImage:
+          (item.producto.imagenes
+            ? parseImagenesJSON(item.producto.imagenes as string)[0]?.url
+            : null) || '/products/default.jpg',
         quantity: item.cantidad,
         price: Number(item.precioEn),
         originalPrice: Number(item.producto.precio),
