@@ -23,6 +23,7 @@ export default function MigratePage() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [productoPrueba, setProductoPrueba] = useState<Producto | null>(null)
   const [loading, setLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
   const [migrando, setMigrando] = useState(false)
   const [migracionCompleta, setMigracionCompleta] = useState(false)
   const [resultado, setResultado] = useState<any>(null)
@@ -32,6 +33,11 @@ export default function MigratePage() {
   useEffect(() => {
     const cargarProductos = async () => {
       try {
+        // Primero obtener debug info
+        const debugResponse = await fetch('/api/migrate/debug')
+        const debugData = await debugResponse.json()
+        setDebugInfo(debugData)
+
         const response = await fetch('/api/products', {
           credentials: 'include',
         })
@@ -43,8 +49,12 @@ export default function MigratePage() {
 
         const data = await response.json()
         const productosConImagenes = data.productos.filter((p: Producto) => {
-          const imagenes = JSON.parse(p.imagenes || '[]') as ImagenData[]
-          return imagenes.length > 0 && imagenes[0].url?.startsWith('https://res.cloudinary.com')
+          try {
+            const imagenes = JSON.parse(p.imagenes || '[]') as ImagenData[]
+            return imagenes.length > 0 && imagenes[0].url?.startsWith('https://res.cloudinary.com')
+          } catch {
+            return false
+          }
         })
 
         setProductos(productosConImagenes)
@@ -156,6 +166,20 @@ export default function MigratePage() {
         </p>
       </div>
 
+      {/* DEBUG INFO */}
+      {debugInfo && (
+        <div className="bg-gray-900 border border-yellow-600 rounded-lg p-4 mb-6">
+          <details className="cursor-pointer">
+            <summary className="font-semibold text-yellow-400 hover:text-yellow-300">
+              🔍 Debug Info (Click para expandir)
+            </summary>
+            <div className="mt-3 text-xs text-gray-300 font-mono bg-black p-3 rounded overflow-auto max-h-40">
+              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            </div>
+          </details>
+        </div>
+      )}
+
       {/* PASO 1: PRUEBA PILOTO */}
       <div className="bg-fiora-dark-bg border-2 border-fiora-gold rounded-lg p-6 mb-8">
         <div className="flex items-center gap-3 mb-6">
@@ -174,33 +198,56 @@ export default function MigratePage() {
                   <p className="text-sm text-gray-400">Código: <span className="text-fiora-gold font-mono">{productoPrueba.codigo}</span></p>
                   
                   {(() => {
-                    const imagenes = JSON.parse(productoPrueba.imagenes || '[]') as ImagenData[]
-                    return (
-                      <>
-                        <p className="text-xs text-gray-500 mt-2 font-mono truncate">
-                          {imagenes[0]?.url?.substring(0, 70)}...
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          Total de imágenes en este producto: <strong>{imagenes.length}</strong>
-                        </p>
-                      </>
-                    )
+                    try {
+                      const imagenes = JSON.parse(productoPrueba.imagenes || '[]') as ImagenData[]
+                      if (!Array.isArray(imagenes) || imagenes.length === 0) {
+                        return <p className="text-xs text-red-400 mt-2">⚠️ No hay imágenes en este producto</p>
+                      }
+                      
+                      const urlImagen = imagenes[0]?.url
+                      if (!urlImagen) {
+                        return <p className="text-xs text-red-400 mt-2">⚠️ URL de imagen vacía</p>
+                      }
+
+                      return (
+                        <>
+                          <p className="text-xs text-gray-500 mt-2 font-mono truncate break-all">
+                            {urlImagen}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Total de imágenes en este producto: <strong>{imagenes.length}</strong>
+                          </p>
+                        </>
+                      )
+                    } catch (e) {
+                      return <p className="text-xs text-red-400 mt-2">⚠️ Error parseando imágenes JSON</p>
+                    }
                   })()}
                 </div>
 
                 {(() => {
-                  const imagenes = JSON.parse(productoPrueba.imagenes || '[]') as ImagenData[]
-                  return (
-                    <a
-                      href={imagenes[0]?.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 hover:bg-gray-700 rounded transition"
-                      title="Ver imagen"
-                    >
-                      <Download className="w-5 h-5 text-gray-400" />
-                    </a>
-                  )
+                  try {
+                    const imagenes = JSON.parse(productoPrueba.imagenes || '[]') as ImagenData[]
+                    const urlImagen = imagenes[0]?.url
+                    
+                    if (!urlImagen) {
+                      return null
+                    }
+
+                    return (
+                      <a
+                        href={urlImagen}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 hover:bg-gray-700 rounded transition shrink-0"
+                        title="Ver imagen en nueva pestaña"
+                      >
+                        <Download className="w-5 h-5 text-gray-400" />
+                      </a>
+                    )
+                  } catch (e) {
+                    return null
+                  }
                 })()}
               </div>
             </div>
@@ -250,7 +297,7 @@ export default function MigratePage() {
           {resultado.error ? (
             <div className="bg-red-900/30 border border-red-500 rounded-lg p-4 mb-8">
               <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-red-400">❌ Error en la prueba</p>
                   <p className="text-sm text-gray-300 mt-1">{resultado.error}</p>
@@ -260,7 +307,7 @@ export default function MigratePage() {
           ) : (
             <div className="bg-green-900/30 border border-green-500 rounded-lg p-4 mb-8">
               <div className="flex gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <Check className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-green-400">✅ Prueba exitosa</p>
                   <p className="text-sm text-gray-300 mt-2">

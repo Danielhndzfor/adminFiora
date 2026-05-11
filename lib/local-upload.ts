@@ -89,28 +89,6 @@ export async function uploadImageLocal(
 
 /**
  * Elimina una imagen del almacenamiento local
- * @param filename - Nombre del archivo a eliminar
- */
-export async function deleteImageLocal(filename: string) {
-  try {
-    const filePath = path.join(UPLOAD_DIR, filename)
-    
-    // Verificar que el archivo está en el directorio de upload
-    if (!filePath.startsWith(UPLOAD_DIR)) {
-      throw new Error('Ruta de archivo no válida')
-    }
-
-    await fs.unlink(filePath)
-    console.log(`✓ Imagen eliminada: ${filename}`)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Error al eliminar imagen'
-    console.error('❌ Error deleting image:', message)
-    // No lanzar error, solo registrar
-  }
-}
-
-/**
- * Elimina una imagen del almacenamiento local
  * @param codigoProducto - Código del producto
  * @param filename - Nombre del archivo a eliminar
  */
