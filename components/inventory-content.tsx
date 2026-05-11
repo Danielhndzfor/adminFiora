@@ -13,6 +13,8 @@ import { EditProductModal } from './edit-product-modal'
 import { ImagePreviewModal } from './image-preview-modal'
 import { fetchCategorias } from '@/lib/categories'
 import { toast } from 'sonner'
+import { getPrincipalImagen } from '@/lib/image-handler'
+import Image from 'next/image'
 
 function formatCurrency(amount: number | string) {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
@@ -43,6 +45,7 @@ interface Product {
   costo?: number | string
   stock: number
   imagen?: string
+  imagenes?: string // JSON string del array de imágenes
   activo: boolean
   categoriaId: number
   categoria?: { id: number; nombre: string }
@@ -411,10 +414,27 @@ export function InventoryContent() {
                 {/* Imagen - Botón Ver Imagen */}
                 <div
                   className="relative h-14 w-14 rounded-xl bg-[#092B2B]/5 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer group"
-                  onClick={() => setPreviewImage({ isOpen: true, url: product.imagen, name: product.nombre })}
+                  onClick={() => {
+                    const imagenPrincipal = product.imagenes 
+                      ? getPrincipalImagen(product.imagenes)?.url 
+                      : product.imagen
+                    setPreviewImage({ isOpen: true, url: imagenPrincipal, name: product.nombre })
+                  }}
                 >
-                  {product.imagen ? (
+                  {product.imagenes || product.imagen ? (
+                    <>
+                      <Image
+                        src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/products/default.jpg' : product.imagen || '/products/default.jpg'}
+                        alt={product.nombre}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                      />
+                      <Eye className="h-6 w-6 text-[#092B2B]/40 group-hover:text-[#092B2B]/60 absolute opacity-0 group-hover:opacity-100" />
+                    </>
+                  ) : (
                     <Eye className="h-6 w-6 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
+                  )}
                   ) : (
                     <Package className="h-6 w-6 text-[#092B2B]/20" />
                   )}
@@ -487,10 +507,23 @@ export function InventoryContent() {
               {/* Imagen - Botón Ver Imagen */}
               <div
                 className="relative w-full aspect-square bg-[#092B2B]/5 flex items-center justify-center overflow-hidden cursor-pointer group shrink-0"
-                onClick={() => setPreviewImage({ isOpen: true, url: product.imagen, name: product.nombre })}
+                onClick={() => {
+                  const imagenPrincipal = product.imagenes 
+                    ? getPrincipalImagen(product.imagenes)?.url 
+                    : product.imagen
+                  setPreviewImage({ isOpen: true, url: imagenPrincipal, name: product.nombre })
+                }}
               >
-                {product.imagen ? (
-                  <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
+                {product.imagenes || product.imagen ? (
+                  <>
+                    <Image
+                      src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/products/default.jpg' : product.imagen || '/products/default.jpg'}
+                      alt={product.nombre}
+                      fill
+                      className="object-cover"
+                    />
+                    <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60 absolute opacity-0 group-hover:opacity-100" />
+                  </>
                 ) : (
                   <Package className="h-20 w-20 text-[#092B2B]/15" />
                 )}

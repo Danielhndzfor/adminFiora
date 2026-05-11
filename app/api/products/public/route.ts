@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
           descripcion: p.descripcion,
           precio: p.precio,
           imagen: (p.imagenes ? parseImagenesJSON(p.imagenes as string)[0]?.url : null) || '/products/default.jpg',
+          imagenes: p.imagenes, // Devolver array JSON completo también
           stock: p.stock,
           disponible: p.stock > 0,
           palabrasClave: p.palabrasClave,

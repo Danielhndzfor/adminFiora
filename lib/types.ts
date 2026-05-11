@@ -1,13 +1,14 @@
 export interface Product {
-  id: string
+  id: string | number
   code: string
   name: string
-  price: number
+  price: number | string
   stock: number
-  image: string
-  category?: string
-  createdAt: Date
-  updatedAt: Date
+  image?: string
+  imagenes?: string // JSON string de array de imágenes
+  category?: string | { id: number; nombre: string }
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export const PRODUCT_CATEGORIES = [

@@ -41,3 +41,12 @@ yarn-error.log*
 next-env.d.ts
 
 .history
+
+# Public uploads - ignore actual images but track directory structure
+public/uploads/productos/**/*.jpg
+public/uploads/productos/**/*.jpeg
+public/uploads/productos/**/*.png
+public/uploads/productos/**/*.gif
+public/uploads/productos/**/*.webp
+# Keep .gitkeep files to track directory structure
+!public/uploads/**/.gitkeep

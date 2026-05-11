@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 import { CartPanel } from './cart-panel'
 import { ImagePreviewModal } from './image-preview-modal'
 import { toast } from 'sonner'
+import { getPrincipalImagen } from '@/lib/image-handler'
+import Image from 'next/image'
 
 function formatCurrency(amount: number | string) {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
@@ -34,6 +36,7 @@ interface Product {
   precio: number | string
   stock: number
   imagen?: string
+  imagenes?: string // JSON string del array de imágenes
   activo: boolean
   categoriaId: number
   categoria?: { id: number; nombre: string }
@@ -183,11 +186,22 @@ export function SalesContent() {
                 className="relative w-full aspect-square bg-[#092B2B]/5 flex items-center justify-center overflow-hidden group shrink-0"
                 onClick={(e) => {
                   e.stopPropagation()
-                  setPreviewImage({ isOpen: true, url: product.imagen, name: product.nombre })
+                  const imagenPrincipal = product.imagenes 
+                    ? getPrincipalImagen(product.imagenes)?.url 
+                    : product.imagen
+                  setPreviewImage({ isOpen: true, url: imagenPrincipal, name: product.nombre })
                 }}
               >
-                {product.imagen ? (
-                  <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
+                {product.imagenes || product.imagen ? (
+                  <>
+                    <Image
+                      src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/products/default.jpg' : product.imagen || '/products/default.jpg'}
+                      alt={product.nombre}
+                      fill
+                      className="object-cover"
+                    />
+                    <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60 absolute opacity-0 group-hover:opacity-100" />
+                  </>
                 ) : (
                   <Package className="h-16 w-16 text-[#092B2B]/15" />
                 )}

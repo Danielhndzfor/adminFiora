@@ -4,6 +4,9 @@ import type { Product } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { Package, Maximize2 } from 'lucide-react'
+import { getPrincipalImagen } from '@/lib/image-handler'
+import Image from 'next/image'
+import { useState } from 'react'
 
 interface ProductCardProps {
   product: Product
@@ -30,6 +33,11 @@ function getStockIndicator(stock: number) {
 export function ProductCard({ product, onTap, onPreview, showCode }: ProductCardProps) {
   const stockInfo = getStockIndicator(product.stock)
   const isOutOfStock = product.stock <= 0
+  const [imageError, setImageError] = useState(false)
+
+  // Obtener URL de la primera imagen
+  const imagenPrincipal = product.imagenes ? getPrincipalImagen(product.imagenes) : null
+  const imageUrl = imagenPrincipal?.url || product.image
 
   return (
     <Card 
@@ -40,13 +48,25 @@ export function ProductCard({ product, onTap, onPreview, showCode }: ProductCard
       onClick={onTap}
     >
       <div className="relative aspect-square bg-muted">
-        {/* Product image placeholder */}
-        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-primary/5 to-primary/10">
-          <Package className="h-12 w-12 text-primary/30" />
-        </div>
+        {/* Mostrar imagen real si existe */}
+        {imageUrl && !imageError ? (
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            fill
+            className="object-cover"
+            onError={() => setImageError(true)}
+            priority={false}
+          />
+        ) : (
+          // Mostrar placeholder si no hay imagen
+          <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-primary/5 to-primary/10">
+            <Package className="h-12 w-12 text-primary/30" />
+          </div>
+        )}
         
         {/* Preview button */}
-        {onPreview && (
+        {onPreview && imageUrl && (
           <button
             onClick={onPreview}
             className="absolute top-2 left-2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
