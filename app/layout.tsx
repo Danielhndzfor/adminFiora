@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
 import { PWAInitializer } from '@/components/pwa-initializer'
 import './globals.css'
@@ -49,7 +48,6 @@ export default function RootLayout({
           {children}
           <Toaster position="top-center" />
         </StoreProvider>
-        <Analytics />
       </body>
     </html>
   )
