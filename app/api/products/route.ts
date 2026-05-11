@@ -1,13 +1,39 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import { generarCodigoProducto } from '@/lib/product-code-generator'
 import { uploadImageFromBase64 } from '@/lib/cloudinary'
+import { verificarTokenJWT } from '@/lib/seguridad'
+
+/**
+ * Valida autenticación del request
+ */
+function validarAutenticacion(request: Request): { valid: boolean; usuarioId?: number; error?: string } {
+  const authHeader = request.headers.get('authorization')
+  const token = authHeader?.replace('Bearer ', '')
+
+  if (!token) {
+    return { valid: false, error: 'Token no proporcionado' }
+  }
+
+  const decoded = verificarTokenJWT(token)
+  if (!decoded) {
+    return { valid: false, error: 'Token inválido o expirado' }
+  }
+
+  return { valid: true, usuarioId: decoded.usuarioId }
+}
 
 /**
  * GET /api/productos
- * Obtiene todos los productos o uno específico
+ * Obtiene todos los productos (requiere autenticación)
+ * Para usuarios públicos, usar /api/products/public
  */
 export async function GET(request: Request) {
+  // Validar autenticación
+  const auth = validarAutenticacion(request)
+  if (!auth.valid) {
+    return NextResponse.json({ error: auth.error }, { status: 401 })
+  }
   try {
     const { searchParams } = new URL(request.url)
     const productoId = searchParams.get('id')
@@ -86,9 +112,15 @@ export async function GET(request: Request) {
 
 /**
  * POST /api/productos
- * Crea un nuevo producto
+ * Crea un nuevo producto (requiere autenticación)
  */
 export async function POST(request: Request) {
+  // Validar autenticación
+  const auth = validarAutenticacion(request)
+  if (!auth.valid) {
+    return NextResponse.json({ error: auth.error }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { nombre, descripcion, palabrasClave, precio, costo, stock, imagenBase64, categoriaId } = body

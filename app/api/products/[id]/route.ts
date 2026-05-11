@@ -1,8 +1,28 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { parseImagenesJSON } from '@/lib/image-handler'
+import { verificarTokenJWT } from '@/lib/seguridad'
 
-// GET obtener producto específico
+/**
+ * Valida autenticación del request
+ */
+function validarAutenticacion(request: Request): { valid: boolean; usuarioId?: number; error?: string } {
+  const authHeader = request.headers.get('authorization')
+  const token = authHeader?.replace('Bearer ', '')
+
+  if (!token) {
+    return { valid: false, error: 'Token no proporcionado' }
+  }
+
+  const decoded = verificarTokenJWT(token)
+  if (!decoded) {
+    return { valid: false, error: 'Token inválido o expirado' }
+  }
+
+  return { valid: true, usuarioId: decoded.usuarioId }
+}
+
+// GET obtener producto específico (sin autenticación - usa /api/products/public para clientes)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,11 +50,17 @@ export async function GET(
   }
 }
 
-// PUT actualizar producto
+// PUT actualizar producto (requiere autenticación)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Validar autenticación
+  const auth = validarAutenticacion(request)
+  if (!auth.valid) {
+    return NextResponse.json({ error: auth.error }, { status: 401 })
+  }
+
   try {
     const { id } = await params
     const productoId = parseInt(id)
@@ -133,11 +159,17 @@ export async function PUT(
   }
 }
 
-// DELETE imagen específica del array (soft delete)
+// DELETE imagen específica del array (soft delete) - requiere autenticación
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Validar autenticación
+  const auth = validarAutenticacion(request)
+  if (!auth.valid) {
+    return NextResponse.json({ error: auth.error }, { status: 401 })
+  }
+
   try {
     const { id } = await params
     const productoId = parseInt(id)

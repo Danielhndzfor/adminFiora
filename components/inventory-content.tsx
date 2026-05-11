@@ -104,7 +104,7 @@ export function InventoryContent() {
       if (sf === 'low') params.set('stockFiltro', 'bajo')
       else if (sf === 'none') params.set('stockFiltro', 'cero')
 
-      const response = await fetch(`/api/products?${params.toString()}`)
+      const response = await fetch(`/api/products/public?${params.toString()}`)
       if (!response.ok) throw new Error('Error cargando productos')
       const data = await response.json()
       const incoming: Product[] = Array.isArray(data) ? data : data.productos || []
@@ -169,6 +169,7 @@ export function InventoryContent() {
     try {
       const res = await fetch(`/api/products/${product.id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stock: newStock }),
       })
@@ -185,7 +186,10 @@ export function InventoryContent() {
   const handleDelete = async (product: Product) => {
     if (!confirm(`¿Desactivar "${product.nombre}"?`)) return
     try {
-      const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/products/${product.id}`, { 
+        method: 'DELETE',
+        credentials: 'include'
+      })
       if (!res.ok) throw new Error()
       setProducts(prev => prev.filter(p => p.id !== product.id))
       toast.success('Producto desactivado')

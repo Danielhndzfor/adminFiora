@@ -69,7 +69,7 @@ export function SalesContent() {
       params.set('limit', '100')
       if (palabra) params.set('palabra', palabra)
 
-      const response = await fetch(`/api/products?${params.toString()}`)
+      const response = await fetch(`/api/products/public?${params.toString()}`)
       if (!response.ok) throw new Error('Error cargando productos')
       const data = await response.json()
       const incoming: Product[] = Array.isArray(data) ? data : data.productos || []

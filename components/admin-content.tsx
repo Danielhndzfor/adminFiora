@@ -106,6 +106,7 @@ export function AdminContent() {
 
       const res = await fetch(catalog.endpoint, {
         method,
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
@@ -133,6 +134,7 @@ export function AdminContent() {
     try {
       const res = await fetch(catalog.endpoint, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id, nombre: item.nombre, activo: !item.activo }),
       })

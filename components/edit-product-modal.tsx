@@ -143,6 +143,7 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
 
       const response = await fetch(`/api/products/${product.id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })

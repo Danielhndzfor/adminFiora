@@ -102,8 +102,17 @@ export function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
         try {
             const response = await fetch('/api/products', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+        body: JSON.stringify({
+                    nombre: nombre.trim(),
+                    descripcion: descripcion.trim() || undefined,
+                    palabrasClave: keywords.join(', ') || undefined,
+                    precio: parseFloat(precio),
+                    costo: costo ? parseFloat(costo) : undefined,
+                    stock: parseInt(stock) || 1,
+                    imagenBase64: imageBase64,
+                    categoriaId: parseInt(categoriaId),
                     nombre: nombre.trim(),
                     descripcion: descripcion.trim() || undefined,
                     palabrasClave: keywords.join(', ') || undefined,
