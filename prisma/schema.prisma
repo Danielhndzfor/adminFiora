@@ -1,184 +1,169 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-// Enums
-enum RolUsuario {
-    ADMINISTRADOR
-    VENDEDOR
-    CLIENTE
-}
-
-// Catálogos
 model RolCatalogo {
-    id          Int      @id @default(autoincrement())
-    nombre      String   @unique @db.VarChar(100)
-    descripcion String?  @db.Text
-    permisos    String?  @db.Text // JSON serializado como string
-    activo      Boolean  @default(true)
-    creadoEn    DateTime @default(now())
-    actualizadoEn DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+  nombre        String    @unique @db.VarChar(100)
+  descripcion   String?   @db.Text
+  permisos      String?   @db.Text
+  activo        Boolean   @default(true)
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+  usuarios      Usuario[]
 
-    usuarios Usuario[]
-
-    @@index([activo])
+  @@index([activo])
 }
 
 model CategoriaCatalogo {
-    id          Int      @id @default(autoincrement())
-    nombre      String   @unique @db.VarChar(100)
-    descripcion String?  @db.Text
-    imagen      String?  @db.Text
-    activo      Boolean  @default(true)
-    creadoEn    DateTime @default(now())
-    actualizadoEn DateTime @updatedAt
+  id            Int        @id @default(autoincrement())
+  nombre        String     @unique @db.VarChar(100)
+  descripcion   String?    @db.Text
+  imagen        String?    @db.Text
+  activo        Boolean    @default(true)
+  creadoEn      DateTime   @default(now())
+  actualizadoEn DateTime   @updatedAt
+  productos     Producto[]
 
-    productos Producto[]
-
-    @@index([activo])
+  @@index([activo])
 }
 
 model MetodoPagoCatalogo {
-    id          Int      @id @default(autoincrement())
-    nombre      String   @unique @db.VarChar(100)
-    descripcion String?  @db.Text
-    activo      Boolean  @default(true)
-    creadoEn    DateTime @default(now())
-    actualizadoEn DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  nombre        String   @unique @db.VarChar(100)
+  descripcion   String?  @db.Text
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+  ordenes       Orden[]
 
-    ordenes Orden[]
-
-    @@index([activo])
+  @@index([activo])
 }
 
 model EstatusCatalogo {
-    id          Int      @id @default(autoincrement())
-    nombre      String   @unique @db.VarChar(100)
-    descripcion String?  @db.Text
-    activo      Boolean  @default(true)
-    creadoEn    DateTime @default(now())
-    actualizadoEn DateTime @updatedAt
+  id            Int                  @id @default(autoincrement())
+  nombre        String               @unique @db.VarChar(100)
+  descripcion   String?              @db.Text
+  activo        Boolean              @default(true)
+  creadoEn      DateTime             @default(now())
+  actualizadoEn DateTime             @updatedAt
+  cambiosFrom   CambioEstatusOrden[] @relation("estatusFrom")
+  cambiosTo     CambioEstatusOrden[] @relation("estatusTo")
+  ordenes       Orden[]
 
-    ordenes Orden[]
-    cambiosFrom CambioEstatusOrden[] @relation("estatusFrom")
-    cambiosTo   CambioEstatusOrden[] @relation("estatusTo")
-
-    @@index([activo])
+  @@index([activo])
 }
 
-// Models
 model Usuario {
-    id                Int      @id @default(autoincrement())
-    correo            String   @unique @db.VarChar(255)
-    contrasena        String   @db.VarChar(255)
-    nombre            String   @db.VarChar(100)
-    apellido          String   @db.VarChar(100)
-    telefono          String?  @db.VarChar(20)
-    direccion         String?  @db.Text
-    ciudad            String?  @db.VarChar(100)
-    estado            String?  @db.VarChar(100)
-    codigoPostal      String?  @db.VarChar(20)
-    pais              String?  @db.VarChar(100)
-    rolId             Int      @default(3) // 3 = CLIENTE por defecto
-    activo            Boolean  @default(true)
-    verificado        Boolean  @default(false)
-    tokenVerificacion String?  @db.VarChar(255)
-    tokenVerificacionEn DateTime?
-    tokenRestablecimiento String?  @db.VarChar(255)
-    tokenRestablecimientoEn DateTime?
-    ultimoAcceso      DateTime?
-    creadoEn          DateTime @default(now())
-    actualizadoEn     DateTime @updatedAt
+  id                      Int         @id @default(autoincrement())
+  correo                  String      @unique @db.VarChar(255)
+  contrasena              String      @db.VarChar(255)
+  nombre                  String      @db.VarChar(100)
+  apellido                String      @db.VarChar(100)
+  telefono                String?     @db.VarChar(20)
+  direccion               String?     @db.Text
+  ciudad                  String?     @db.VarChar(100)
+  estado                  String?     @db.VarChar(100)
+  codigoPostal            String?     @db.VarChar(20)
+  pais                    String?     @db.VarChar(100)
+  rolId                   Int         @default(3)
+  activo                  Boolean     @default(true)
+  verificado              Boolean     @default(false)
+  tokenVerificacion       String?     @db.VarChar(255)
+  tokenVerificacionEn     DateTime?
+  tokenRestablecimiento   String?     @db.VarChar(255)
+  tokenRestablecimientoEn DateTime?
+  ultimoAcceso            DateTime?
+  creadoEn                DateTime    @default(now())
+  actualizadoEn           DateTime    @updatedAt
+  ordenes                 Orden[]
+  rol                     RolCatalogo @relation(fields: [rolId], references: [id])
 
-    rol   RolCatalogo @relation(fields: [rolId], references: [id])
-    ordenes Orden[]
-
-    @@index([correo])
-    @@index([activo])
-    @@index([rolId])
+  @@index([correo])
+  @@index([activo])
+  @@index([rolId])
 }
 
 model Producto {
-    id          Int      @id @default(autoincrement())
-    codigo      String   @unique @db.VarChar(50)
-    nombre      String   @db.VarChar(255)
-    descripcion String?  @db.Text
-    palabrasClave String?  @db.Text
-    precio      Decimal  @db.Decimal(10, 2)
-    costo       Decimal?  @db.Decimal(10, 2)
-    stock       Int      @default(0)
-    imagenes    String?  @db.LongText // JSON array: [{ url, nombreArchivo, orden, creadoEn }]
-    categoriaId Int
-    activo      Boolean  @default(true)
-    creadoEn    DateTime @default(now())
-    actualizadoEn DateTime @updatedAt
+  id             Int               @id @default(autoincrement())
+  codigo         String            @unique @db.VarChar(50)
+  nombre         String            @db.VarChar(255)
+  descripcion    String?           @db.Text
+  palabrasClave  String?           @db.Text
+  precio         Decimal           @db.Decimal(10, 2)
+  costo          Decimal?          @db.Decimal(10, 2)
+  stock          Int               @default(0)
+  categoriaId    Int
+  activo         Boolean           @default(true)
+  creadoEn       DateTime          @default(now())
+  actualizadoEn  DateTime          @updatedAt
+  publicIdImagen String?           @db.VarChar(255)
+  imagenes       String?           @db.LongText
+  itemsOrden     ItemOrden[]
+  categoria      CategoriaCatalogo @relation(fields: [categoriaId], references: [id])
 
-    categoria CategoriaCatalogo @relation(fields: [categoriaId], references: [id])
-    itemsOrden ItemOrden[]
-
-    @@index([codigo])
-    @@index([nombre])
-    @@index([activo])
-    @@index([categoriaId])
+  @@index([codigo])
+  @@index([nombre])
+  @@index([activo])
+  @@index([categoriaId])
 }
 
 model ItemOrden {
-    id          Int      @id @default(autoincrement())
-    ordenId     Int
-    productoId  Int
-    cantidad    Int
-    precioEn    Decimal  @db.Decimal(10, 2)
-    creadoEn    DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  ordenId    Int
+  productoId Int
+  cantidad   Int
+  precioEn   Decimal  @db.Decimal(10, 2)
+  creadoEn   DateTime @default(now())
+  orden      Orden    @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  producto   Producto @relation(fields: [productoId], references: [id])
 
-    orden   Orden   @relation(fields: [ordenId], references: [id], onDelete: Cascade)
-    producto Producto @relation(fields: [productoId], references: [id])
-
-    @@index([ordenId])
-    @@index([productoId])
+  @@index([ordenId])
+  @@index([productoId])
 }
 
-// Historial de cambios de estado de órdenes
 model CambioEstatusOrden {
-    id              Int      @id @default(autoincrement())
-    ordenId         Int
-    estatusAnterior Int
-    estatusNuevo    Int
-    razon           String?  @db.Text
-    usuarioExterno  String?  @db.VarChar(100) // Para tracking de cambios manuales
-    creadoEn        DateTime @default(now())
+  id              Int             @id @default(autoincrement())
+  ordenId         Int
+  estatusAnterior Int
+  estatusNuevo    Int
+  razon           String?         @db.Text
+  usuarioExterno  String?         @db.VarChar(100)
+  creadoEn        DateTime        @default(now())
+  estatusFrom     EstatusCatalogo @relation("estatusFrom", fields: [estatusAnterior], references: [id])
+  estatusTo       EstatusCatalogo @relation("estatusTo", fields: [estatusNuevo], references: [id])
+  orden           Orden           @relation(fields: [ordenId], references: [id], onDelete: Cascade)
 
-    orden        Orden            @relation(fields: [ordenId], references: [id], onDelete: Cascade)
-    estatusFrom  EstatusCatalogo  @relation("estatusFrom", fields: [estatusAnterior], references: [id])
-    estatusTo    EstatusCatalogo  @relation("estatusTo", fields: [estatusNuevo], references: [id])
-
-    @@index([ordenId])
-    @@index([creadoEn])
+  @@index([ordenId])
+  @@index([creadoEn])
+  @@index([estatusAnterior], map: "CambioEstatusOrden_estatusAnterior_fkey")
+  @@index([estatusNuevo], map: "CambioEstatusOrden_estatusNuevo_fkey")
 }
 
 model Orden {
-    id               Int         @id @default(autoincrement())
-    numeroTicket     String      @unique @db.VarChar(50)
-    usuarioId        Int
-    metodoPagoId     Int
-    idEstatus        Int         @default(1)
-    montoTotal       Decimal     @db.Decimal(12, 2)
-    notas            String?     @db.Text
-    creadoEn         DateTime    @default(now())
-    actualizadoEn    DateTime    @updatedAt
+  id             Int                  @id @default(autoincrement())
+  numeroTicket   String               @unique @db.VarChar(50)
+  usuarioId      Int
+  metodoPagoId   Int
+  montoTotal     Decimal              @db.Decimal(12, 2)
+  notas          String?              @db.Text
+  creadoEn       DateTime             @default(now())
+  actualizadoEn  DateTime             @updatedAt
+  idEstatus      Int                  @default(1)
+  cambiosEstatus CambioEstatusOrden[]
+  items          ItemOrden[]
+  estatus        EstatusCatalogo      @relation(fields: [idEstatus], references: [id])
+  metodoPago     MetodoPagoCatalogo   @relation(fields: [metodoPagoId], references: [id])
+  usuario        Usuario              @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
-    usuario       Usuario           @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-    metodoPago    MetodoPagoCatalogo @relation(fields: [metodoPagoId], references: [id])
-    estatus       EstatusCatalogo   @relation(fields: [idEstatus], references: [id])
-    items         ItemOrden[]
-    cambiosEstatus CambioEstatusOrden[]
-
-    @@index([numeroTicket])
-    @@index([usuarioId])
-    @@index([idEstatus])
-    @@index([creadoEn])
+  @@index([numeroTicket])
+  @@index([usuarioId])
+  @@index([idEstatus])
+  @@index([creadoEn])
+  @@index([metodoPagoId], map: "Orden_metodoPagoId_fkey")
 }
