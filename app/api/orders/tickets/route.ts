@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
                 id: true,
                 nombre: true,
                 codigo: true,
-                imagen: true,
+                imagenes: true,
                 precio: true,
               },
             },

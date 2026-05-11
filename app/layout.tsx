@@ -1,20 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Merriweather } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { StoreProvider } from '@/lib/store'
 import { PWAInitializer } from '@/components/pwa-initializer'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
-
-const merri = Merriweather({
-  subsets: ['latin'],
-  variable: '--font-merri',
-})
+// `next/font` removed — use fonts via global CSS or local @font-face
 
 export const metadata: Metadata = {
   title: 'FIORA | Sistema de Joyeria',
@@ -52,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.variable} ${merri.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <PWAInitializer />
         <StoreProvider>
           {children}

@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         nombre: true,
         descripcion: true,
         precio: true,
-        imagen: true,
+        imagenes: true,
         stock: true,
         palabrasClave: true,
         categoria: {

@@ -66,7 +66,7 @@ export async function GET(
                 id: true,
                 codigo: true,
                 nombre: true,
-                imagen: true,
+                    imagenes: true,
               },
             },
           },

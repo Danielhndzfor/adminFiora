@@ -112,8 +112,7 @@ model Producto {
     precio      Decimal  @db.Decimal(10, 2)
     costo       Decimal?  @db.Decimal(10, 2)
     stock       Int      @default(0)
-    imagen      String?  @db.Text
-    publicIdImagen String? @db.VarChar(255)
+    imagenes    String?  @db.LongText // JSON array: [{ url, nombreArchivo, orden, creadoEn }]
     categoriaId Int
     activo      Boolean  @default(true)
     creadoEn    DateTime @default(now())

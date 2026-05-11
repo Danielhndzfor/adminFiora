@@ -79,7 +79,10 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  output: "standalone",
+  // Esto le dice a Next que ignore que no hay reglas específicas de turbo
+  turbopack: {}, 
 };
+
 
 export default withPWA(nextConfig);
