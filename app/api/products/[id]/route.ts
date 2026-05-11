@@ -101,8 +101,11 @@ export async function PUT(
         )
       }
 
-      // Subir imagen localmente
-      const resultado = await uploadImageLocal(imagenBase64)
+      // Subir imagen localmente con código del producto
+      const resultado = await uploadImageLocal(imagenBase64, {
+        codigoProducto: productoActual.codigo,
+        numeroImagen: nuevoOrden - 1, // 0-based index
+      })
 
       // Agregar a array
       imagenesActuales.push({

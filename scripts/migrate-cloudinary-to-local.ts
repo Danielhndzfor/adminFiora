@@ -49,23 +49,30 @@ async function downloadImage(url: string, filename: string): Promise<boolean> {
 }
 
 /**
- * Extrae el nombre de archivo de una URL de Cloudinary
+ * Genera nombre de archivo usando código de producto
+ * Formato: {CODIGO-PRODUCTO}_{NUMERO-IMAGEN}.jpg
+ * Ejemplo: ORO-001_0.jpg, ORO-001_1.jpg
  */
-function generateFilename(url: string, index: number): string {
+function generateFilename(codigoProducto: string, index: number): string {
+  return `${codigoProducto}_${index}.jpg`
+}
+
+/**
+ * Extrae extensión de una URL (fallback a jpg)
+ */
+function getExtension(url: string): string {
   try {
-    // Generar nombre basado en timestamp e índice
-    const timestamp = Date.now()
     const ext = url.split('.').pop()?.split('?')[0] || 'jpg'
-    return `${timestamp}_${index}.${ext}`
+    return ['jpg', 'jpeg', 'png', 'webp'].includes(ext.toLowerCase()) ? ext.toLowerCase() : 'jpg'
   } catch {
-    return `${Date.now()}_${index}.jpg`
+    return 'jpg'
   }
 }
 
 /**
  * Convierte URL de Cloudinary a local
  */
-function convertUrlToLocal(oldUrl: string, newFilename: string): string {
+function convertUrlToLocal(newFilename: string): string {
   return `/uploads/productos/${newFilename}`
 }
 
@@ -102,7 +109,7 @@ async function migrateProducts() {
           continue
         }
 
-        console.log(`\n📦 Producto: ${producto.nombre} (${imagenesList.length} imágenes)`)
+        console.log(`\n📦 Producto: ${producto.nombre} (Código: ${producto.codigo}) - ${imagenesList.length} imágenes`)
 
         // Descargar y migrar cada imagen
         for (let i = 0; i < imagenesList.length; i++) {
@@ -115,14 +122,14 @@ async function migrateProducts() {
             continue
           }
 
-          const newFilename = generateFilename(cloudinaryUrl, i)
+          const newFilename = generateFilename(producto.codigo, i)
           console.log(`  ⬇️  Descargando: ${cloudinaryUrl.substring(0, 60)}...`)
 
           const success = await downloadImage(cloudinaryUrl, newFilename)
 
           if (success) {
             // Actualizar la URL en memoria
-            imagenesList[i].url = convertUrlToLocal(cloudinaryUrl, newFilename)
+            imagenesList[i].url = convertUrlToLocal(newFilename)
             imagenesList[i].nombreArchivo = newFilename
             migratedCount++
           } else {

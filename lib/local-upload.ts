@@ -22,12 +22,12 @@ async function ensureUploadDir() {
 /**
  * Sube una imagen desde base64 al almacenamiento local
  * @param base64Data - Datos base64 de la imagen (ej: "data:image/jpeg;base64,...")
- * @param options - Opciones (nombreArchivo opcional)
+ * @param options - Opciones { codigoProducto, numeroImagen }
  * @returns Objeto con url e información de la imagen
  */
 export async function uploadImageLocal(
   base64Data: string,
-  options: { nombreArchivo?: string } = {}
+  options: { codigoProducto?: string; numeroImagen?: number } = {}
 ) {
   try {
     await ensureUploadDir()
@@ -41,10 +41,16 @@ export async function uploadImageLocal(
     const [, fileType, base64String] = matches
     const ext = fileType.toLowerCase() === 'jpeg' ? 'jpg' : fileType.toLowerCase()
 
-    // Generar nombre único
-    const timestamp = Date.now()
-    const random = crypto.randomBytes(4).toString('hex')
-    const filename = `${timestamp}_${random}.${ext}`
+    // Generar nombre: {codigoProducto}_{numeroImagen}.{ext} o timestamp si no hay código
+    let filename: string
+    if (options.codigoProducto && options.numeroImagen !== undefined) {
+      filename = `${options.codigoProducto}_${options.numeroImagen}.${ext}`
+    } else {
+      // Fallback para uploads sin código de producto
+      const timestamp = Date.now()
+      const random = crypto.randomBytes(4).toString('hex')
+      filename = `${timestamp}_${random}.${ext}`
+    }
 
     // Convertir base64 a buffer
     const imageBuffer = Buffer.from(base64String, 'base64')
@@ -96,4 +102,18 @@ export async function deleteImageLocal(filename: string) {
  */
 export function getImageUrl(filename: string): string {
   return `/uploads/productos/${filename}`
+}
+
+/**
+ * Genera nombre de archivo para migración
+ * @param codigoProducto - Código del producto (ej: "ORO-001")
+ * @param numeroImagen - Índice de la imagen (0, 1, 2...)
+ * @param extension - Extensión del archivo (jpg, png, etc)
+ */
+export function generateLocalFilename(
+  codigoProducto: string,
+  numeroImagen: number,
+  extension: string = 'jpg'
+): string {
+  return `${codigoProducto}_${numeroImagen}.${extension}`
 }
