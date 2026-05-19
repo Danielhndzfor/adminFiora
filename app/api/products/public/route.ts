@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getCorsHeaders } from "@/lib/cors-utils";
-import { parseImagenesJSON } from '@/lib/image-handler'
+import { parseImagenesJSON } from '@/lib/image-handler-client'
 
 /**
  * GET /api/products/public
@@ -65,9 +65,12 @@ export async function GET(req: NextRequest) {
         nombre: true,
         descripcion: true,
         precio: true,
+        costo: true,
         imagenes: true,
         stock: true,
         palabrasClave: true,
+        activo: true,
+        categoriaId: true,
         categoria: {
           select: {
             id: true,
@@ -92,11 +95,14 @@ export async function GET(req: NextRequest) {
           nombre: p.nombre,
           descripcion: p.descripcion,
           precio: p.precio,
+          costo: p.costo,
           imagen: (p.imagenes ? parseImagenesJSON(p.imagenes as string)[0]?.url : null) || '/products/default.jpg',
-          imagenes: p.imagenes, // Devolver array JSON completo también
+          imagenes: p.imagenes,
           stock: p.stock,
           disponible: p.stock > 0,
           palabrasClave: p.palabrasClave,
+          activo: p.activo,
+          categoriaId: p.categoriaId,
           categoria: p.categoria,
         })),
         total,

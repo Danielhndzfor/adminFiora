@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 import type { Orden, ItemOrden, Producto, Usuario } from '@prisma/client'
-import { parseImagenesJSON } from '@/lib/image-handler'
+import { parseImagenesJSON } from '@/lib/image-handler-client'
 
 export async function GET(request: NextRequest) {
   try {

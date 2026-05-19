@@ -11,6 +11,9 @@ export async function GET(req: NextRequest) {
     // Build where clause
     const where: any = {
       activo: true,
+      categoria: {
+        activo: true, // Solo categorías activas
+      },
     };
 
     if (palabra) {

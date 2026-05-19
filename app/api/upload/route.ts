@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { parseImagenesJSON } from '@/lib/image-handler'
+import { parseImagenesJSON } from '@/lib/image-handler-client'
 
 const SERVER_BASE_URL = 'https://fiora.mascontrol.app/fioraImages'
 

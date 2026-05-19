@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { X, Trash2, Copy, Camera, Loader2, Tag, Plus, Eye } from 'lucide-react'
+import { X, Trash2, Copy, Camera, Loader2, Tag, Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import { ImagePreviewModal } from './image-preview-modal'
+
 
 interface Product {
   id: number
@@ -43,21 +43,20 @@ interface EditProductModalProps {
 }
 
 export function EditProductModal({ product, open, onOpenChange, onSuccess }: EditProductModalProps) {
-  const [nombre, setNombre] = useState(product.nombre)
+  const [nombre, setNombre] = useState(product.nombre || '')
   const [descripcion, setDescripcion] = useState(product.descripcion || '')
   const [keywordInput, setKeywordInput] = useState('')
   const [keywords, setKeywords] = useState<string[]>(
     product.palabrasClave ? product.palabrasClave.split(', ').filter(k => k.trim()) : []
   )
-  const [precio, setPrecio] = useState(product.precio.toString())
-  const [costo, setCosto] = useState(product.costo?.toString() || '')
-  const [stock, setStock] = useState(product.stock.toString())
-  const [activo, setActivo] = useState(product.activo)
-  const [categoriaId, setCategoriaId] = useState(product.categoriaId.toString())
+  const [precio, setPrecio] = useState(product.precio ? String(product.precio) : '')
+  const [costo, setCosto] = useState(product.costo ? String(product.costo) : '')
+  const [stock, setStock] = useState(product.stock ? String(product.stock) : '0')
+  const [activo, setActivo] = useState(product.activo !== undefined ? product.activo : true)
+  const [categoriaId, setCategoriaId] = useState(product.categoriaId ? String(product.categoriaId) : '')
   const [categorias, setCategorias] = useState<Category[]>([])
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageBase64, setImageBase64] = useState<string | null>(null)
-  const [showImagePreview, setShowImagePreview] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -339,40 +338,24 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-[#092B2B]">Imagen del producto</Label>
               <div 
-                className="relative aspect-video bg-[#092B2B]/5 rounded-xl overflow-hidden cursor-pointer border-2 border-dashed border-[#092B2B]/30 hover:border-[#092B2B]/60 hover:bg-[#092B2B]/10 transition-all"
+                className="relative aspect-video bg-[#092B2B]/5 rounded-xl overflow-hidden cursor-pointer border-2 border-[#092B2B]/20 hover:border-[#092B2B]/40 hover:bg-[#092B2B]/10 transition-all"
                 onClick={() => !loading && fileInputRef.current?.click()}
               >
-                {imagePreview ? (
+                {imagePreview || product.imagen ? (
                   <>
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img 
+                      src={imagePreview || product.imagen || '/products/default.jpg'} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover" 
+                    />
                     <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <Camera className="h-8 w-8 text-white" />
+                      <Camera className="h-8 w-8 text-white opacity-0 hover:opacity-100 transition-opacity" />
                     </div>
                   </>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    {product.imagen ? (
-                      <>
-                        <Eye className="h-10 w-10 text-[#092B2B]/60" />
-                        <span className="text-sm font-medium text-[#092B2B]/70">Ver imagen actual</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setShowImagePreview(true)
-                          }}
-                          className="mt-2 px-3 py-1 bg-[#092B2B]/10 hover:bg-[#092B2B]/20 rounded-lg text-xs font-medium text-[#092B2B] transition-colors"
-                        >
-                          👁️ Ver
-                        </button>
-                        <span className="text-xs text-[#092B2B]/50 mt-2">O toca para cambiar</span>
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="h-10 w-10 text-[#092B2B]/60" />
-                        <span className="text-sm font-medium text-[#092B2B]/70">Toca para cambiar foto</span>
-                      </>
-                    )}
+                    <Camera className="h-10 w-10 text-[#092B2B]/60" />
+                    <span className="text-sm font-medium text-[#092B2B]/70">Toca para cambiar foto</span>
                   </div>
                 )}
                 <input
@@ -416,7 +399,9 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
                 <Label htmlFor="categoria" className="text-xs font-semibold uppercase tracking-wide text-[#092B2B]">Categoría *</Label>
                 <Select value={categoriaId} onValueChange={setCategoriaId} disabled={loading || loadingCategorias}>
                   <SelectTrigger className="mt-2 w-full border-[#092B2B]/20 focus:border-[#092B2B] focus:ring-[#092B2B]/20">
-                    <SelectValue placeholder="Selecciona" />
+                    <SelectValue 
+                      placeholder={loadingCategorias ? "Cargando..." : "Selecciona una categoría"}
+                    />
                   </SelectTrigger>
                   <SelectContent className="relative z-9999">
                     {loadingCategorias ? (
@@ -585,13 +570,7 @@ export function EditProductModal({ product, open, onOpenChange, onSuccess }: Edi
           </form>
         </div>
       </div>
-      
-      <ImagePreviewModal 
-        isOpen={showImagePreview}
-        onClose={() => setShowImagePreview(false)}
-        imageUrl={product.imagen || undefined}
-        productName={product.nombre}
-      />
+
     </div>
   )
 }

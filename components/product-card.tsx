@@ -4,7 +4,7 @@ import type { Product } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { Package, Maximize2 } from 'lucide-react'
-import { getPrincipalImagen } from '@/lib/image-handler'
+import { getPrincipalImagen } from '@/lib/image-handler-client'
 import Image from 'next/image'
 import { useState } from 'react'
 
@@ -55,6 +55,7 @@ export function ProductCard({ product, onTap, onPreview, showCode }: ProductCard
             alt={product.name}
             fill
             className="object-cover"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             onError={() => setImageError(true)}
             priority={false}
           />

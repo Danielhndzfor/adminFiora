@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { parseImagenesJSON } from '@/lib/image-handler'
+import { parseImagenesJSON } from '@/lib/image-handler-client'
 import { uploadImageLocal, reorganizeImages } from '@/lib/local-upload'
 import { verificarTokenJWT } from '@/lib/seguridad'
 

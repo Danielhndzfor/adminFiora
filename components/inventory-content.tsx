@@ -12,8 +12,8 @@ import { AddProductModal } from './add-product-modal'
 import { EditProductModal } from './edit-product-modal'
 import { ImagePreviewModal } from './image-preview-modal'
 import { fetchCategorias } from '@/lib/categories'
+import { getPrincipalImagen } from '@/lib/image-handler-client'
 import { toast } from 'sonner'
-import { getPrincipalImagen } from '@/lib/image-handler'
 import Image from 'next/image'
 
 function formatCurrency(amount: number | string) {
@@ -389,7 +389,7 @@ export function InventoryContent() {
       {/* ── VISTA LISTA ───────────────────────────────── */}
       {viewMode === 'list' && products.length > 0 && (
         <div className="flex flex-col gap-2">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div
               key={product.id}
               className="relative overflow-hidden rounded-xl"
@@ -429,12 +429,10 @@ export function InventoryContent() {
                         fill
                         className="object-cover"
                         sizes="56px"
+                        loading={index === 0 ? "eager" : "lazy"}
                       />
                       <Eye className="h-6 w-6 text-[#092B2B]/40 group-hover:text-[#092B2B]/60 absolute opacity-0 group-hover:opacity-100" />
                     </>
-                  ) : (
-                    <Eye className="h-6 w-6 text-[#092B2B]/40 group-hover:text-[#092B2B]/60" />
-                  )}
                   ) : (
                     <Package className="h-6 w-6 text-[#092B2B]/20" />
                   )}
@@ -499,7 +497,7 @@ export function InventoryContent() {
       {/* ── VISTA CUADRÍCULA ──────────────────────────── */}
       {viewMode === 'grid' && products.length > 0 && (
         <div className="grid grid-cols-2 gap-3">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div
               key={product.id}
               className="bg-white border border-[#092B2B]/25 rounded-2xl shadow-md overflow-hidden hover:shadow-lg hover:border-[#092B2B]/40 transition-all duration-200 flex flex-col"
@@ -521,6 +519,8 @@ export function InventoryContent() {
                       alt={product.nombre}
                       fill
                       className="object-cover"
+                      sizes="(max-width: 640px) 50vw, 33vw"
+                      loading={index === 0 ? "eager" : "lazy"}
                     />
                     <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60 absolute opacity-0 group-hover:opacity-100" />
                   </>

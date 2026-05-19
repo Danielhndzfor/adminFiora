@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { CartPanel } from './cart-panel'
 import { ImagePreviewModal } from './image-preview-modal'
 import { toast } from 'sonner'
-import { getPrincipalImagen } from '@/lib/image-handler'
+import { getPrincipalImagen } from '@/lib/image-handler-client'
 import Image from 'next/image'
 
 function formatCurrency(amount: number | string) {
@@ -77,7 +77,7 @@ export function SalesContent() {
       const data = await response.json()
       const incoming: Product[] = Array.isArray(data) ? data : data.productos || []
 
-      setProducts(incoming.filter(p => p.activo && p.stock > 0))
+      setProducts(incoming.filter(p => p.stock > 0))
     } catch (error) {
       toast.error('Error cargando productos')
       console.error(error)
@@ -175,7 +175,7 @@ export function SalesContent() {
       {/* ── GRID DE PRODUCTOS ──────────────────────── */}
       {products.length > 0 && (
         <div className="grid grid-cols-2 gap-3">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div
               key={product.id}
               onClick={() => handleAddToCart(product)}
@@ -199,6 +199,8 @@ export function SalesContent() {
                       alt={product.nombre}
                       fill
                       className="object-cover"
+                      sizes="(max-width: 640px) 50vw, 33vw"
+                      loading={index === 0 ? "eager" : "lazy"}
                     />
                     <Eye className="h-12 w-12 text-[#092B2B]/40 group-hover:text-[#092B2B]/60 absolute opacity-0 group-hover:opacity-100" />
                   </>

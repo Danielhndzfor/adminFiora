@@ -113,14 +113,6 @@ export function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
                     stock: parseInt(stock) || 1,
                     imagenBase64: imageBase64,
                     categoriaId: parseInt(categoriaId),
-                    nombre: nombre.trim(),
-                    descripcion: descripcion.trim() || undefined,
-                    palabrasClave: keywords.join(', ') || undefined,
-                    precio: parseFloat(precio),
-                    costo: costo ? parseFloat(costo) : undefined,
-                    stock: parseInt(stock) || 1,
-                    imagenBase64: imageBase64,
-                    categoriaId: parseInt(categoriaId),
                 }),
             })
 
@@ -313,7 +305,9 @@ export function AddProductModal({ onClose, onSuccess }: AddProductModalProps) {
                                 <Label htmlFor="categoria" className="text-xs font-semibold uppercase tracking-wide text-[#092B2B]">Categoría *</Label>
                                 <Select value={categoriaId} onValueChange={setCategoriaId} disabled={loading || loadingCategorias}>
                                     <SelectTrigger className="mt-2 border-[#092B2B]/20 focus:border-[#092B2B] focus:ring-[#092B2B]/20">
-                                        <SelectValue placeholder="Selecciona categoría" />
+                                        <SelectValue 
+                                          placeholder={loadingCategorias ? "Cargando..." : "Selecciona una categoría"}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent className="relative z-9999">
                                         {loadingCategorias ? (
