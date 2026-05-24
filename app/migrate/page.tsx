@@ -29,7 +29,7 @@ export default function MigratePage() {
   const [resultado, setResultado] = useState<any>(null)
   const [pruebaPasada, setPruebaPasada] = useState(false)
 
-  // Cargar productos con imágenes de Cloudinary
+  // Cargar productos con imágenes externas pendientes de migrar
   useEffect(() => {
     const cargarProductos = async () => {
       try {
@@ -109,7 +109,7 @@ export default function MigratePage() {
   }
 
   const iniciarMigracionCompleta = async () => {
-    if (!window.confirm('⚠️ Esto migrará TODAS las imágenes de Cloudinary. ¿Estás seguro?')) {
+    if (!window.confirm('⚠️ Esto migrará TODAS las imágenes pendientes al VPS. ¿Estás seguro?')) {
       return
     }
 
@@ -156,7 +156,7 @@ export default function MigratePage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">🖼️ Migración de Imágenes</h1>
         <p className="text-gray-400">
-          Migrar imágenes de Cloudinary al almacenamiento local del VPS
+          Migrar imágenes externas al almacenamiento del VPS
         </p>
       </div>
 
@@ -248,7 +248,7 @@ export default function MigratePage() {
 
             <div className="mb-4 p-4 bg-blue-900/20 border border-blue-500 rounded-lg">
               <p className="text-sm text-blue-200">
-                📋 Esta imagen será descargada de Cloudinary, guardada localmente en:<br/>
+                📋 Esta imagen será descargada desde su URL externa, guardada localmente en:<br/>
                 <code className="text-xs text-blue-100 font-mono">
                   /uploads/productos/{productoPrueba.codigo}/imagen_0.jpg
                 </code>
@@ -280,7 +280,7 @@ export default function MigratePage() {
           </>
         ) : (
           <div className="text-center text-gray-400">
-            No hay productos con imágenes de Cloudinary para migrar
+            No hay productos con imágenes externas pendientes de migrar
           </div>
         )}
       </div>
@@ -341,9 +341,9 @@ export default function MigratePage() {
 
           <div className="mb-4 p-4 bg-yellow-900/20 border border-yellow-500 rounded-lg">
             <p className="text-sm text-yellow-200 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>
-                Esto migrará TODAS las imágenes de Cloudinary de TODOS los productos. 
+              Esto migrará TODAS las imágenes pendientes de TODOS los productos al VPS. 
                 El proceso puede tardar dependiendo de la cantidad de imágenes.
               </span>
             </p>
@@ -384,7 +384,7 @@ export default function MigratePage() {
           {resultado.error ? (
             <div className="bg-red-900/30 border border-red-500 rounded-lg p-4 mt-8">
               <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-red-400">❌ Error en migración completa</p>
                   <p className="text-sm text-gray-300 mt-1">{resultado.error}</p>
@@ -394,7 +394,7 @@ export default function MigratePage() {
           ) : (
             <div className="bg-green-900/30 border border-green-500 rounded-lg p-4 mt-8">
               <div className="flex gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-green-400">✅ Migración completa finalizada</p>
                   <div className="mt-3 text-sm text-gray-300 space-y-1">

@@ -1,21 +1,12 @@
 /**
- * Endpoint de prueba: Validar conectividad FTP + Cloudinary
+ * Endpoint de prueba: Validar conectividad FTP + VPS
  * GET /api/test-connection
  */
 
 import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import axios from 'axios'
 import FTP from 'ftp'
-import { v2 as cloudinary } from 'cloudinary'
-
-// Configurar Cloudinary
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
 
 const FTP_CONFIG = {
   host: process.env.FTP_HOST || '198.251.78.127',
@@ -25,7 +16,6 @@ const FTP_CONFIG = {
 }
 
 const REMOTE_PATH = process.env.FTP_REMOTE_PATH || '/httpdocs/fioraImages'
-const FTP_BASE_URL = process.env.FTP_BASE_URL || 'https://fiora.mascontrol.app/uploads/products'
 const TEST_FILE = 'test-fiora-migration.txt'
 
 interface TestResult {
@@ -50,9 +40,6 @@ export async function GET() {
   try {
     // Test 1: Variables de entorno
     const envOk =
-      !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
-      !!process.env.CLOUDINARY_API_KEY &&
-      !!process.env.CLOUDINARY_API_SECRET &&
       !!process.env.FTP_HOST &&
       !!process.env.FTP_PORT &&
       !!process.env.FTP_USER &&
@@ -63,7 +50,7 @@ export async function GET() {
     results.push({
       name: 'Variables de Entorno',
       passed: envOk,
-      message: envOk ? 'Todas las claves están presentes (Cloudinary + FTP)' : 'Faltan variables',
+      message: envOk ? 'Todas las claves FTP/VPS están presentes' : 'Faltan variables FTP/VPS',
     })
 
     // Test 2: Conectar FTP
@@ -198,57 +185,6 @@ export async function GET() {
       }
     }
 
-    // Test 5: Cloudinary - Listar
-    try {
-      const cloudinaryResult = await cloudinary.api.resources({
-        type: 'upload',
-        max_results: 1,
-      })
-
-      results.push({
-        name: 'Cloudinary API',
-        passed: true,
-        message: `Conectado. Total de imágenes: ${cloudinaryResult.total_count || 0}`,
-      })
-
-      // Test 6: Descargar imagen Cloudinary
-      if (cloudinaryResult.resources && cloudinaryResult.resources.length > 0) {
-        try {
-          const imageUrl = cloudinaryResult.resources[0].secure_url
-          const response = await axios.get(imageUrl, {
-            responseType: 'arraybuffer',
-            timeout: 10000,
-          })
-
-          const sizeMB = (response.data.length / (1024 * 1024)).toFixed(2)
-          results.push({
-            name: 'Descargar Imagen Cloudinary',
-            passed: true,
-            message: `Imagen descargada: ${sizeMB} MB`,
-          })
-        } catch (error) {
-          results.push({
-            name: 'Descargar Imagen Cloudinary',
-            passed: false,
-            message: 'Error descargando imagen',
-            error: String(error),
-          })
-        }
-      } else {
-        results.push({
-          name: 'Descargar Imagen Cloudinary',
-          passed: true,
-          message: 'Skipped: No hay imágenes en Cloudinary',
-        })
-      }
-    } catch (error) {
-      results.push({
-        name: 'Cloudinary API',
-        passed: false,
-        message: 'No se pudo conectar a Cloudinary',
-        error: String(error),
-      })
-    }
   } catch (error) {
     return NextResponse.json(
       {
@@ -272,7 +208,7 @@ export async function GET() {
     results,
     recommendation:
       passed === total
-        ? 'Sistema listo para migración. Ejecuta: npx ts-node prisma/migrate-images.ts --dry-run'
-        : 'Revisa los errores antes de intentar la migración.',
+        ? 'FTP/VPS listo. Puedes subir imágenes sin problemas.'
+        : 'Revisa la conexión FTP y las variables de entorno antes de continuar.',
   })
 }

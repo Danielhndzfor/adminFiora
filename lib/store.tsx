@@ -77,9 +77,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       id: `s${Date.now()}`,
       productId,
       productName: product.name,
-      productImage: product.image,
-      price: customPrice ?? product.price,
-      originalPrice: product.price,
+      productImage: product.image || '',
+      price: Number(customPrice ?? product.price),
+      originalPrice: Number(product.price),
       paymentMethod,
       userId: currentUser?.id ?? '1',
       branchId: currentBranch?.id,
@@ -196,7 +196,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const getCartTotal = useCallback(() => {
     return cart.reduce((total, item) => {
-      const price = item.customPrice ?? item.product.price
+      const price = Number(item.customPrice ?? item.product.price)
       return total + (price * item.quantity)
     }, 0)
   }, [cart])
@@ -206,11 +206,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       for (let i = 0; i < item.quantity; i++) {
         const newSale: Sale = {
           id: `s${Date.now()}-${item.product.id}-${i}`,
-          productId: item.product.id,
+          productId: String(item.product.id),
           productName: item.product.name,
-          productImage: item.product.image,
-          price: item.customPrice ?? item.product.price,
-          originalPrice: item.product.price,
+          productImage: item.product.image || '',
+          price: Number(item.customPrice ?? item.product.price),
+          originalPrice: Number(item.product.price),
           paymentMethod,
           userId: currentUser?.id ?? '1',
           branchId: currentBranch?.id,

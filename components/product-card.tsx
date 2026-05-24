@@ -99,7 +99,7 @@ export function ProductCard({ product, onTap, onPreview, showCode }: ProductCard
           {product.name}
         </h3>
         <p className="text-lg font-bold text-primary mt-1">
-          {formatCurrency(product.price)}
+          {formatCurrency(Number(product.price))}
         </p>
       </CardContent>
     </Card>

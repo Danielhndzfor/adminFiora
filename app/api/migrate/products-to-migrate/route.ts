@@ -10,7 +10,7 @@ interface ImagenData {
 
 /**
  * GET /api/migrate/products-to-migrate
- * Obtiene productos con imágenes de Cloudinary (PÚBLICO para página de migración)
+ * Obtiene productos con imágenes de URL externa (pendientes de migrar al VPS)
  * No requiere autenticación
  */
 export async function GET() {
@@ -30,7 +30,7 @@ export async function GET() {
       },
     })
 
-    // Filtrar solo los que tienen imágenes de Cloudinary
+    // Filtrar solo los que tienen imágenes de URL externa (no del VPS propio)
     const productosConCloudinary = productos.filter((p) => {
       try {
         const imagenes = JSON.parse((p.imagenes as string) || '[]') as ImagenData[]

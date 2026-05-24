@@ -5,7 +5,7 @@ import fs from 'fs/promises'
 import path from 'path'
 
 /**
- * Descarga una imagen desde Cloudinary al VPS
+ * Descarga una imagen desde URL externa al servidor local
  */
 async function downloadImageFromCloudinary(url: string, filePath: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -40,7 +40,7 @@ async function downloadImageFromCloudinary(url: string, filePath: string): Promi
 
 /**
  * POST /api/migrate/test
- * Prueba migrar UNA imagen de Cloudinary y actualizar BD
+ * Prueba migrar UNA imagen de URL externa y actualizar BD
  */
 export async function POST(request: NextRequest) {
   try {
@@ -110,12 +110,12 @@ export async function POST(request: NextRequest) {
     const filename = `imagen_0.jpg`
     const filePath = path.join(uploadDir, filename)
     
-    console.log(`📥 Descargando imagen de Cloudinary...`)
+    console.log(`📥 Descargando imagen externa...`)
     const success = await downloadImageFromCloudinary(cloudinaryUrl, filePath)
 
     if (!success) {
       return NextResponse.json(
-        { error: 'Error descargando imagen de Cloudinary' },
+        { error: 'Error descargando imagen externa' },
         { status: 500 }
       )
     }
