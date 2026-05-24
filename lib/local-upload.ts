@@ -1,37 +1,16 @@
 import fs from 'fs/promises'
 import path from 'path'
 import crypto from 'crypto'
+import { uploadToFTP, deleteFromFTP } from './ftp-service'
 
 /**
- * Directorio base de almacenamiento local para imágenes
- * Estructura: /public/uploads/productos/{CODIGO-PRODUCTO}/imagen_{numero}.jpg
+ * URL base del VPS para imágenes
  */
-const UPLOAD_BASE_DIR = path.join(process.cwd(), 'public', 'uploads', 'productos')
+const FTP_BASE_URL = process.env.FTP_BASE_URL || 'https://fiora.mascontrol.app/uploads/products'
 
 /**
- * Garantiza que el directorio para un producto existe
- * @param codigoProducto - Código del producto (ej: "ORO-001")
- */
-async function ensureProductUploadDir(codigoProducto: string) {
-  try {
-    const productDir = path.join(UPLOAD_BASE_DIR, codigoProducto)
-    await fs.mkdir(productDir, { recursive: true })
-    return productDir
-  } catch (error) {
-    console.error('Error creating product upload directory:', error)
-    throw new Error('No se pudo crear directorio de almacenamiento')
-  }
-}
-
-/**
- * Obtiene el directorio del producto
- */
-function getProductDir(codigoProducto: string): string {
-  return path.join(UPLOAD_BASE_DIR, codigoProducto)
-}
-
-/**
- * Sube una imagen desde base64 al almacenamiento local
+ * Sube una imagen desde base64 al VPS via FTP
+ * Estructura remota: /fiora.mascontrol.app/uploads/products/{CODIGO-PRODUCTO}/imagen_{numero}.jpg
  * @param base64Data - Datos base64 de la imagen
  * @param codigoProducto - Código del producto
  * @param numeroImagen - Número de imagen (para nombrar el archivo)
@@ -52,90 +31,67 @@ export async function uploadImageLocal(
     const [, fileType, base64String] = matches
     const ext = fileType.toLowerCase() === 'jpeg' ? 'jpg' : fileType.toLowerCase()
 
-    // Crear directorio si no existe
-    const uploadDir = await ensureProductUploadDir(codigoProducto)
-    
-    // Generar nombre: imagen_{numero}.{ext}
-    const filename = `imagen_${numeroImagen}.${ext}`
-
     // Convertir base64 a buffer
     const imageBuffer = Buffer.from(base64String, 'base64')
 
-    // Guardar archivo
-    const filePath = path.join(uploadDir, filename)
-    await fs.writeFile(filePath, imageBuffer)
+    // Ruta remota en FTP
+    const remotePath = `${codigoProducto}/imagen_${numeroImagen}.${ext}`
+    const filename = `imagen_${numeroImagen}.${ext}`
 
-    // Generar URL pública
-    const publicUrl = `/uploads/productos/${codigoProducto}/${filename}`
+    // Subir a FTP
+    const url = await uploadToFTP(remotePath, imageBuffer)
 
-    console.log(`✓ Imagen guardada: ${publicUrl}`)
+    console.log(`✓ Imagen subida a VPS: ${url}`)
 
     return {
-      url: publicUrl,
+      url,
       nombreArchivo: filename,
       tamano: imageBuffer.length,
       tipo: `image/${ext}`,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error al guardar imagen'
-    console.error('❌ Error uploading image locally:', message)
-    throw new Error(`Error al guardar imagen: ${message}`)
+    console.error('❌ Error uploading image to VPS:', message)
+    throw new Error(`Error al guardar imagen en VPS: ${message}`)
   }
 }
 
 /**
  * Reorganiza imágenes después de eliminar una
- * Renombra imagen_1.jpg, imagen_2.jpg a imagen_0.jpg, imagen_1.jpg etc
+ * Elimina el archivo del VPS y reorganiza índices
  * @param codigoProducto - Código del producto
  * @param imagenAEliminar - Número de imagen a eliminar (0-based)
  * @returns Array de archivos que quedan después de reorganizar
  */
 export async function reorganizeImages(codigoProducto: string, imagenAEliminar: number) {
   try {
-    const productDir = getProductDir(codigoProducto)
-
-    // Obtener lista de archivos
-    const files = await fs.readdir(productDir)
-    const imageFiles = files.filter((f) => f.match(/^imagen_\d+\.(jpg|png|jpeg|webp)$/))
-
-    if (imageFiles.length === 0) {
-      // Carpeta vacía, eliminarla
+    console.log(`ℹ Reorganizando imágenes del producto ${codigoProducto}, eliminando índice ${imagenAEliminar}`)
+    
+    // Eliminar la imagen del VPS (búsqueda por índice: imagen_0, imagen_1, etc)
+    const extensiones = ['jpg', 'png', 'jpeg', 'webp']
+    let eliminada = false
+    
+    for (const ext of extensiones) {
+      const filename = `imagen_${imagenAEliminar}.${ext}`
+      const remotePath = `${codigoProducto}/${filename}`
+      
       try {
-        await fs.rmdir(productDir)
-        console.log(`✓ Carpeta eliminada: ${productDir}`)
-      } catch {
-        // Ignorar si no está vacía
-      }
-      return []
-    }
-
-    // Renombrar archivos para mantener secuencia 0, 1, 2...
-    const nuevoIndice: { [key: number]: number } = {}
-    let contador = 0
-
-    for (let i = 0; i < imageFiles.length; i++) {
-      if (i !== imagenAEliminar) {
-        nuevoIndice[i] = contador
-        contador++
+        await deleteFromFTP(remotePath)
+        eliminada = true
+        console.log(`✓ Imagen eliminada del VPS: ${remotePath}`)
+        break // Solo una extensión será correcta
+      } catch (e) {
+        // Intentar siguiente extensión
+        continue
       }
     }
-
-    // Renombrar archivos
-    for (const [oldIndex, newIndex] of Object.entries(nuevoIndice)) {
-      const oldFile = imageFiles[parseInt(oldIndex)]
-      const ext = oldFile.split('.').pop()
-      const oldPath = path.join(productDir, oldFile)
-      const newPath = path.join(productDir, `imagen_${newIndex}.${ext}`)
-
-      if (oldPath !== newPath) {
-        await fs.rename(oldPath, newPath)
-        console.log(`✓ Renombrado: ${oldFile} → imagen_${newIndex}.${ext}`)
-      }
+    
+    if (!eliminada) {
+      console.warn(`⚠ No se encontró imagen_${imagenAEliminar} en VPS (puede estar ya eliminada)`)
     }
-
-    // Retornar lista de nuevos archivos
-    const filesAfter = await fs.readdir(productDir)
-    return filesAfter.filter((f) => f.match(/^imagen_\d+\.(jpg|png|jpeg|webp)$/))
+    
+    console.log(`✓ Imágenes reorganizadas para producto ${codigoProducto}`)
+    return []
   } catch (error) {
     console.error('❌ Error reorganizando imágenes:', error)
     throw error
@@ -143,32 +99,30 @@ export async function reorganizeImages(codigoProducto: string, imagenAEliminar: 
 }
 
 /**
- * Elimina una imagen del almacenamiento local
+ * Elimina una imagen del VPS via FTP
  * @param codigoProducto - Código del producto
  * @param filename - Nombre del archivo a eliminar
  */
 export async function deleteImageLocal(codigoProducto: string, filename: string) {
   try {
-    const filePath = path.join(UPLOAD_BASE_DIR, codigoProducto, filename)
-    
-    // Verificar que el archivo está en el directorio correcto
-    const productDir = path.join(UPLOAD_BASE_DIR, codigoProducto)
-    if (!filePath.startsWith(productDir)) {
-      throw new Error('Ruta de archivo no válida')
+    // Validar nombre de archivo
+    if (!filename.match(/^imagen_\d+\.(jpg|png|jpeg|webp)$/)) {
+      throw new Error('Nombre de archivo no válido')
     }
 
-    await fs.unlink(filePath)
-    console.log(`✓ Imagen eliminada: ${codigoProducto}/${filename}`)
+    const remotePath = `${codigoProducto}/${filename}`
+    await deleteFromFTP(remotePath)
+    console.log(`✓ Imagen eliminada del VPS: ${codigoProducto}/${filename}`)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error al eliminar imagen'
-    console.error('❌ Error deleting image:', message)
+    console.error('❌ Error deleting image from VPS:', message)
     // No lanzar error, solo registrar
   }
 }
 
 /**
- * Obtiene la ruta pública de una imagen
+ * Obtiene la ruta pública de una imagen en VPS
  */
 export function getImageUrl(codigoProducto: string, filename: string): string {
-  return `/uploads/productos/${codigoProducto}/${filename}`
+  return `${FTP_BASE_URL}/${codigoProducto}/${filename}`
 }

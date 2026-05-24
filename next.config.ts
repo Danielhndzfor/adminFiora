@@ -81,7 +81,17 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   output: "standalone",
   // Esto le dice a Next que ignore que no hay reglas específicas de turbo
-  turbopack: {}, 
+  turbopack: {},
+  // Permitir imágenes desde la VPS
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'fiora.mascontrol.app',
+        pathname: '/uploads/products/**',
+      },
+    ],
+  },
 };
 
 

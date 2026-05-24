@@ -7,9 +7,9 @@ import { verificarTokenJWT } from '@/lib/seguridad'
 /**
  * Valida autenticación del request
  */
-function validarAutenticacion(request: Request): { valid: boolean; usuarioId?: number; error?: string } {
+function validarAutenticacion(request: NextRequest): { valid: boolean; usuarioId?: number; error?: string } {
   const authHeader = request.headers.get('authorization')
-  const token = authHeader?.replace('Bearer ', '')
+  const token = authHeader?.replace('Bearer ', '') || request.cookies.get('token')?.value
 
   if (!token) {
     return { valid: false, error: 'Token no proporcionado' }
@@ -28,7 +28,7 @@ function validarAutenticacion(request: Request): { valid: boolean; usuarioId?: n
  * Obtiene todos los productos (requiere autenticación)
  * Para usuarios públicos, usar /api/products/public
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   // Validar autenticación
   const auth = validarAutenticacion(request)
   if (!auth.valid) {
@@ -113,8 +113,10 @@ export async function GET(request: Request) {
 /**
  * POST /api/productos
  * Crea un nuevo producto (requiere autenticación)
+ * 
+ * IMPORTANTE: Si la imagen falla, NO se crea el producto (rollback)
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   // Validar autenticación
   const auth = validarAutenticacion(request)
   if (!auth.valid) {
@@ -146,16 +148,29 @@ export async function POST(request: Request) {
     // Generar código automático PRIMERO
     const codigo = await generarCodigoProducto()
 
-    // Subir imagen localmente si existe
+    // 🔒 PASO CRÍTICO: Validar imagen ANTES de crear el producto
+    // Si imagenBase64 existe y falla la subida, NO se crea nada (rollback)
     let urlImagen = null
     let nombreArchivo = ''
     if (imagenBase64) {
-      const resultado = await uploadImageLocal(imagenBase64, codigo, 0)
-      urlImagen = resultado.url
-      nombreArchivo = resultado.nombreArchivo
+      try {
+        const resultado = await uploadImageLocal(imagenBase64, codigo, 0)
+        urlImagen = resultado.url
+        nombreArchivo = resultado.nombreArchivo
+      } catch (imageError) {
+        const errorMsg = imageError instanceof Error ? imageError.message : 'Error desconocido'
+        console.error('❌ Rollback: Falló subida de imagen, no se crea el producto:', errorMsg)
+        return NextResponse.json(
+          { 
+            error: 'No se pudo subir la imagen. Por seguridad, no se creó el producto.',
+            detalles: errorMsg
+          },
+          { status: 400 }
+        )
+      }
     }
 
-    // Crear producto con imágenes
+    // ✅ Una vez validada la imagen, crear el producto en transacción
     const imagenesPayload = urlImagen
       ? JSON.stringify([
           {
@@ -165,7 +180,7 @@ export async function POST(request: Request) {
             creadoEn: new Date().toISOString(),
           },
         ])
-      : undefined
+      : JSON.stringify([]) // Guardar array vacío en lugar de undefined
 
     const producto = await prisma.producto.create({
       data: {
@@ -182,8 +197,18 @@ export async function POST(request: Request) {
       include: { categoria: true },
     })
 
+    console.log(`✓ Producto creado exitosamente: ${producto.codigo}`)
     return NextResponse.json(producto, { status: 201 })
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    const errorMessage = err instanceof Error ? err.message : String(err)
+    const errorStack = err instanceof Error ? err.stack : ''
+    console.error('❌ POST /api/products error:', { errorMessage, errorStack })
+    return NextResponse.json(
+      { 
+        error: errorMessage,
+        detail: process.env.NODE_ENV === 'development' ? errorStack : undefined
+      }, 
+      { status: 500 }
+    )
   }
 }

@@ -23,7 +23,7 @@ else
     echo -e "${GREEN}✓ .env.local existe${NC}"
     
     # Verificar variables requeridas
-    REQUIRED_VARS=("DATABASE_URL" "JWT_SECRET" "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME" "NEXT_PUBLIC_APP_URL")
+    REQUIRED_VARS=("DATABASE_URL" "JWT_SECRET" "NEXT_PUBLIC_APP_URL")
     
     for var in "${REQUIRED_VARS[@]}"; do
         if grep -q "^$var=" .env.local; then

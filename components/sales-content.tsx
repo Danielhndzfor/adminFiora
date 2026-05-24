@@ -195,7 +195,7 @@ export function SalesContent() {
                 {product.imagenes || product.imagen ? (
                   <>
                     <Image
-                      src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/products/default.jpg' : product.imagen || '/products/default.jpg'}
+                      src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/placeholder.jpg' : product.imagen || '/placeholder.jpg'}
                       alt={product.nombre}
                       fill
                       className="object-cover"

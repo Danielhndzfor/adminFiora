@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Plus, Search, Package, Minus, Edit2, Loader2, Trash2, Eye,
-  LayoutList, Grid2X2, SlidersHorizontal,
+  LayoutList, Grid2X2, SlidersHorizontal, ArrowDown, ArrowUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AddProductModal } from './add-product-modal'
@@ -74,7 +74,10 @@ export function InventoryContent() {
   const [previewImage, setPreviewImage] = useState<{ isOpen: boolean; url?: string; name?: string }>({ isOpen: false })
   const [swipeStart, setSwipeStart] = useState<{ x: number; productId: number | null }>({ x: 0, productId: null })
   const [swipeProduct, setSwipeProduct] = useState<number | null>(null)
-  const [globalStats, setGlobalStats] = useState<{ totalArticulos: number; totalStock: number }>({ totalArticulos: 0, totalStock: 0 })
+  const [globalStats, setGlobalStats] = useState<{ activos: number; inactivos: number; totalStock: number }>({ activos: 0, inactivos: 0, totalStock: 0 })
+  const [sortBy, setSortBy] = useState<'nombre' | 'precio' | 'stock'>('nombre')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'activos' | 'inactivos'>('activos')
 
   useEffect(() => {
     fetchCategorias().then(setCategories).catch(console.error)
@@ -142,7 +145,8 @@ export function InventoryContent() {
       if (!response.ok) throw new Error('Error cargando stats')
       const data = await response.json()
       setGlobalStats({
-        totalArticulos: data.totalArticulos || 0,
+        activos: data.activos || 0,
+        inactivos: data.inactivos || 0,
         totalStock: data.totalStock || 0,
       })
     } catch (error) {
@@ -226,7 +230,39 @@ export function InventoryContent() {
   }, [sentinelRef.current, hasMore, loadingMore, page])
 
   const reloadCurrent = () => loadProducts(1, searchQuery.trim(), categoriaFilter, stockFilter)
-  const activeFiltersCount = (categoriaFilter ? 1 : 0) + (stockFilter !== 'all' ? 1 : 0)
+  const activeFiltersCount = (categoriaFilter ? 1 : 0) + (stockFilter !== 'all' ? 1 : 0) + (statusFilter !== 'activos' ? 1 : 0)
+
+  const getSortedProducts = () => {
+    let filtered = [...products]
+    
+    // Filtrar por estado
+    if (statusFilter === 'activos') {
+      filtered = filtered.filter(p => p.activo)
+    } else if (statusFilter === 'inactivos') {
+      filtered = filtered.filter(p => !p.activo)
+    }
+    
+    // Ordenar
+    if (sortBy === 'nombre') {
+      filtered.sort((a, b) => sortDir === 'asc' 
+        ? a.nombre.localeCompare(b.nombre)
+        : b.nombre.localeCompare(a.nombre)
+      )
+    } else if (sortBy === 'precio') {
+      filtered.sort((a, b) => {
+        const diff = parseFloat(String(a.precio)) - parseFloat(String(b.precio))
+        return sortDir === 'asc' ? diff : -diff
+      })
+    } else if (sortBy === 'stock') {
+      filtered.sort((a, b) => {
+        const diff = a.stock - b.stock
+        return sortDir === 'asc' ? diff : -diff
+      })
+    }
+    return filtered
+  }
+
+  const sortedProducts = getSortedProducts()
 
   if (loading && page === 1) {
     return (
@@ -361,20 +397,89 @@ export function InventoryContent() {
               ))}
             </div>
           </div>
+
+          {/* Estado */}
+          <div className="border-t border-[#092B2B]/10 pt-2.5">
+            <p className="text-[10px] font-semibold text-[#092B2B]/50 uppercase tracking-wider mb-1.5">Estado</p>
+            <div className="flex gap-1.5">
+              {([
+                { value: 'all', label: 'Todos' },
+                { value: 'activos', label: 'Activos' },
+                { value: 'inactivos', label: 'Inactivos' },
+              ] as const).map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setStatusFilter(opt.value)}
+                  className={cn(
+                    'text-xs px-2.5 py-1 rounded-full border font-medium transition-colors',
+                    statusFilter === opt.value
+                      ? 'bg-[#092B2B] text-white border-[#092B2B]'
+                      : 'bg-white border-[#092B2B]/20 text-[#092B2B]/60 hover:border-[#092B2B]/40 hover:text-[#092B2B]'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
       {/* ── STATS ─────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: 'Artículos', value: globalStats.totalArticulos, color: 'text-[#092B2B]' },
-          { label: 'Total stock', value: globalStats.totalStock, color: 'text-[#092B2B]' },
-        ].map(s => (
-          <div key={s.label} className="rounded-xl bg-white border border-[#092B2B]/15 py-3 px-4 shadow-sm text-center hover:border-[#092B2B]/30 transition-colors">
-            <p className={cn('text-2xl font-bold leading-none tracking-tight', s.color)}>{s.value}</p>
-            <p className="text-xs text-[#092B2B]/50 mt-2 font-semibold">{s.label}</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-white border border-[#092B2B]/15 py-3 px-4 shadow-sm text-center hover:border-[#092B2B]/30 transition-colors">
+          <p className="text-2xl font-bold leading-none tracking-tight text-emerald-600">{globalStats.activos}</p>
+          <p className="text-xs text-[#092B2B]/50 mt-2 font-semibold">Activos</p>
+        </div>
+        <div className="rounded-xl bg-white border border-[#092B2B]/15 py-3 px-4 shadow-sm text-center hover:border-[#092B2B]/30 transition-colors">
+          <p className="text-2xl font-bold leading-none tracking-tight text-gray-500">{globalStats.inactivos}</p>
+          <p className="text-xs text-[#092B2B]/50 mt-2 font-semibold">Inactivos</p>
+        </div>
+        <div className="rounded-xl bg-white border border-[#092B2B]/15 py-3 px-4 shadow-sm text-center hover:border-[#092B2B]/30 transition-colors col-span-2 sm:col-span-1">
+          <p className="text-2xl font-bold leading-none tracking-tight text-[#092B2B]">{globalStats.totalStock}</p>
+          <p className="text-xs text-[#092B2B]/50 mt-2 font-semibold">Total stock</p>
+        </div>
+      </div>
+
+      {/* ── ORDENAMIENTO ──────────────────────────────── */}
+      <div className="flex items-center justify-between bg-white border border-[#092B2B]/15 rounded-xl p-3 shadow-sm">
+        <p className="text-xs font-semibold text-[#092B2B]/50 uppercase tracking-wider">Ordenar por:</p>
+        <div className="flex gap-2 items-center">
+          {/* Botones de campo */}
+          <div className="flex gap-1.5 rounded-lg border border-[#092B2B]/20 p-1 bg-[#092B2B]/2">
+            {[
+              { value: 'nombre', label: 'Nombre' },
+              { value: 'precio', label: 'Precio' },
+              { value: 'stock', label: 'Stock' },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value as 'nombre' | 'precio' | 'stock')}
+                className={cn(
+                  'text-xs px-2.5 py-1 rounded-md font-medium transition-colors',
+                  sortBy === opt.value
+                    ? 'bg-[#092B2B] text-white'
+                    : 'bg-transparent text-[#092B2B]/60 hover:text-[#092B2B]'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        ))}
+
+          {/* Botón dirección */}
+          <button
+            onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')}
+            className="h-8 w-8 rounded-lg border border-[#092B2B]/20 bg-white hover:bg-[#092B2B]/5 flex items-center justify-center text-[#092B2B] transition-colors shrink-0"
+            title={sortDir === 'asc' ? 'Ascendente' : 'Descendente'}
+          >
+            {sortDir === 'asc' ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : (
+              <ArrowDown className="h-4 w-4" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── EMPTY STATE ───────────────────────────────── */}
@@ -389,7 +494,7 @@ export function InventoryContent() {
       {/* ── VISTA LISTA ───────────────────────────────── */}
       {viewMode === 'list' && products.length > 0 && (
         <div className="flex flex-col gap-2">
-          {products.map((product, index) => (
+          {sortedProducts.map((product, index) => (
             <div
               key={product.id}
               className="relative overflow-hidden rounded-xl"
@@ -424,7 +529,7 @@ export function InventoryContent() {
                   {product.imagenes || product.imagen ? (
                     <>
                       <Image
-                        src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/products/default.jpg' : product.imagen || '/products/default.jpg'}
+                        src={product.imagenes ? getPrincipalImagen(product.imagenes)?.url || '/placeholder.jpg' : product.imagen || '/placeholder.jpg'}
                         alt={product.nombre}
                         fill
                         className="object-cover"
@@ -497,7 +602,7 @@ export function InventoryContent() {
       {/* ── VISTA CUADRÍCULA ──────────────────────────── */}
       {viewMode === 'grid' && products.length > 0 && (
         <div className="grid grid-cols-2 gap-3">
-          {products.map((product, index) => (
+          {sortedProducts.map((product, index) => (
             <div
               key={product.id}
               className="bg-white border border-[#092B2B]/25 rounded-2xl shadow-md overflow-hidden hover:shadow-lg hover:border-[#092B2B]/40 transition-all duration-200 flex flex-col"

@@ -43,9 +43,9 @@ export async function GET(req: NextRequest) {
 
     if (palabra) {
       where.OR = [
-        { nombre: { contains: palabra, mode: "insensitive" } },
-        { descripcion: { contains: palabra, mode: "insensitive" } },
-        { palabrasClave: { contains: palabra, mode: "insensitive" } },
+        { nombre: { contains: palabra } },
+        { descripcion: { contains: palabra } },
+        { palabrasClave: { contains: palabra } },
       ];
     }
 
@@ -89,22 +89,25 @@ export async function GET(req: NextRequest) {
     // Format response
     return NextResponse.json(
       {
-          productos: productos.map((p: any) => ({
-          id: p.id,
-          codigo: p.codigo,
-          nombre: p.nombre,
-          descripcion: p.descripcion,
-          precio: p.precio,
-          costo: p.costo,
-          imagen: (p.imagenes ? parseImagenesJSON(p.imagenes as string)[0]?.url : null) || '/products/default.jpg',
-          imagenes: p.imagenes,
-          stock: p.stock,
-          disponible: p.stock > 0,
-          palabrasClave: p.palabrasClave,
-          activo: p.activo,
-          categoriaId: p.categoriaId,
-          categoria: p.categoria,
-        })),
+          productos: productos.map((p: any) => {
+          const imagenesArray = parseImagenesJSON(p.imagenes as string)
+          return {
+            id: p.id,
+            codigo: p.codigo,
+            nombre: p.nombre,
+            descripcion: p.descripcion,
+            precio: p.precio,
+            costo: p.costo,
+            imagen: imagenesArray[0]?.url || '/products/default.jpg',
+            imagenes: JSON.stringify(imagenesArray),
+            stock: p.stock,
+            disponible: p.stock > 0,
+            palabrasClave: p.palabrasClave,
+            activo: p.activo,
+            categoriaId: p.categoriaId,
+            categoria: p.categoria,
+          }
+        }),
         total,
         page,
         limit,

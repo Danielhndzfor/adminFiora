@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       console.error('VPS devolvió HTML, no JSON:', text.substring(0, 100))
       return NextResponse.json(
         { 
-          error: 'VPS no respondió con JSON. Los scripts PHP no existen en /httpdocs/api/',
+          error: 'VPS no respondió con JSON. Los scripts PHP no existen en /fiora.mascontrol.app/api/',
           detail: 'Asegúrate de crear: upload-image.php, get-image.php, update-image.php, delete-image.php',
           received: text.substring(0, 100)
         },
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
         console.error('VPS devolvió HTML, no JSON:', text.substring(0, 100))
         return NextResponse.json(
           { 
-            error: 'VPS no respondió con JSON. Los scripts PHP no existen en /httpdocs/api/',
+            error: 'VPS no respondió con JSON. Los scripts PHP no existen en /fiora.mascontrol.app/api/',
             detail: 'Asegúrate de crear: upload-image.php, get-image.php, update-image.php, delete-image.php',
             received: text.substring(0, 100)
           },
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
         console.error('VPS devolvió HTML, no JSON:', text.substring(0, 100))
         return NextResponse.json(
           { 
-            error: 'VPS no respondió con JSON. Los scripts PHP no existen en /httpdocs/api/',
+            error: 'VPS no respondió con JSON. Los scripts PHP no existen en /fiora.mascontrol.app/api/',
             detail: 'Asegúrate de crear: upload-image.php, get-image.php, update-image.php, delete-image.php',
             received: text.substring(0, 100)
           },
@@ -152,7 +152,7 @@ export async function PUT(request: Request) {
       console.error('VPS devolvió HTML, no JSON:', text.substring(0, 100))
       return NextResponse.json(
         { 
-          error: 'VPS no respondió con JSON. Los scripts PHP no existen en /httpdocs/api/',
+          error: 'VPS no respondió con JSON. Los scripts PHP no existen en /fiora.mascontrol.app/api/',
           detail: 'Asegúrate de crear: upload-image.php, get-image.php, update-image.php, delete-image.php',
           received: text.substring(0, 100)
         },
@@ -197,7 +197,7 @@ export async function DELETE(request: Request) {
       console.error('VPS devolvió HTML, no JSON:', text.substring(0, 100))
       return NextResponse.json(
         { 
-          error: 'VPS no respondió con JSON. Los scripts PHP no existen en /httpdocs/api/',
+          error: 'VPS no respondió con JSON. Los scripts PHP no existen en /fiora.mascontrol.app/api/',
           detail: 'Asegúrate de crear: upload-image.php, get-image.php, update-image.php, delete-image.php',
           received: text.substring(0, 100)
         },

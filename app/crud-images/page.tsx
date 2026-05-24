@@ -52,7 +52,7 @@ export default function CRUDImagesPage() {
         // Si hay error sobre scripts PHP
         if (data.error && data.error.includes('Los scripts PHP no existen')) {
           toast.error('⚠️ Scripts PHP no creados', {
-            description: 'Necesitas crear los 4 archivos en /httpdocs/api/ del VPS',
+            description: 'Necesitas crear los 4 archivos en /fiora.mascontrol.app/api/ del VPS',
           })
         } else if (data.success) {
           toast.success('✅ Imagen subida exitosamente')
@@ -80,7 +80,7 @@ export default function CRUDImagesPage() {
       // Si hay error sobre scripts PHP
       if (data.error && data.error.includes('Los scripts PHP no existen')) {
         toast.error('⚠️ Scripts PHP no creados', {
-          description: 'Necesitas crear los 4 archivos en /httpdocs/api/ del VPS',
+          description: 'Necesitas crear los 4 archivos en /fiora.mascontrol.app/api/ del VPS',
         })
         setImages([])
         return
@@ -419,7 +419,7 @@ export default function CRUDImagesPage() {
             <ol className="text-xs space-y-2 text-gray-700">
               <li>1. Abre: <code className="bg-gray-200 px-2 py-1 rounded">VPS_SCRIPTS_COPY_PASTE.md</code></li>
               <li>2. Copia cada script PHP</li>
-              <li>3. Pégalos en tu VPS en: <code className="bg-gray-200 px-2 py-1 rounded">/httpdocs/api/</code></li>
+              <li>3. Pégalos en tu VPS en: <code className="bg-gray-200 px-2 py-1 rounded">/fiora.mascontrol.app/api/</code></li>
               <li>4. Recarga esta página</li>
             </ol>
           </div>

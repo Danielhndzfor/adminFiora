@@ -90,22 +90,21 @@ model Usuario {
 }
 
 model Producto {
-  id             Int               @id @default(autoincrement())
-  codigo         String            @unique @db.VarChar(50)
-  nombre         String            @db.VarChar(255)
-  descripcion    String?           @db.Text
-  palabrasClave  String?           @db.Text
-  precio         Decimal           @db.Decimal(10, 2)
-  costo          Decimal?          @db.Decimal(10, 2)
-  stock          Int               @default(0)
-  categoriaId    Int
-  activo         Boolean           @default(true)
-  creadoEn       DateTime          @default(now())
-  actualizadoEn  DateTime          @updatedAt
-  publicIdImagen String?           @db.VarChar(255)
-  imagenes       String?           @db.LongText
-  itemsOrden     ItemOrden[]
-  categoria      CategoriaCatalogo @relation(fields: [categoriaId], references: [id])
+  id            Int               @id @default(autoincrement())
+  codigo        String            @unique @db.VarChar(50)
+  nombre        String            @db.VarChar(255)
+  descripcion   String?           @db.Text
+  palabrasClave String?           @db.Text
+  precio        Decimal           @db.Decimal(10, 2)
+  costo         Decimal?          @db.Decimal(10, 2)
+  stock         Int               @default(0)
+  categoriaId   Int
+  activo        Boolean           @default(true)
+  creadoEn      DateTime          @default(now())
+  actualizadoEn DateTime          @updatedAt
+  imagenes      String?           @db.LongText
+  itemsOrden    ItemOrden[]
+  categoria     CategoriaCatalogo @relation(fields: [categoriaId], references: [id])
 
   @@index([codigo])
   @@index([nombre])

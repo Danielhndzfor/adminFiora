@@ -36,8 +36,8 @@ export async function GET(req: NextRequest) {
 
     if (palabra) {
       where.OR = [
-        { nombre: { contains: palabra, mode: "insensitive" } },
-        { descripcion: { contains: palabra, mode: "insensitive" } },
+        { nombre: { contains: palabra } },
+        { descripcion: { contains: palabra } },
       ]
     }
 

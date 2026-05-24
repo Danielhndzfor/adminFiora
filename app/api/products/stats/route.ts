@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     // Build where clause
     const where: any = {
-      activo: true,
+      //activo: true,
       categoria: {
         activo: true, // Solo categorías activas
       },
@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
 
     if (palabra) {
       where.OR = [
-        { nombre: { contains: palabra, mode: "insensitive" } },
-        { descripcion: { contains: palabra, mode: "insensitive" } },
-        { palabrasClave: { contains: palabra, mode: "insensitive" } },
+        { nombre: { contains: palabra } },
+        { descripcion: { contains: palabra } },
+        { palabrasClave: { contains: palabra } },
       ];
     }
 
@@ -34,19 +34,24 @@ export async function GET(req: NextRequest) {
       where.stock = 0;
     }
 
-    // Get count and total stock
-    const productos = await prisma.producto.findMany({
-      where,
-      select: {
-        stock: true,
-      },
+    // Get counts by status and total stock
+    const productosActivos = await prisma.producto.findMany({
+      where: { ...where, activo: true },
+      select: { stock: true },
     });
 
-    const totalArticulos = productos.length;
-    const totalStock = productos.reduce((sum: number, p: { stock: number }) => sum + p.stock, 0);
+    const productosInactivos = await prisma.producto.findMany({
+      where: { ...where, activo: false },
+      select: { stock: true },
+    });
+
+    const activos = productosActivos.length;
+    const inactivos = productosInactivos.length;
+    const totalStock = productosActivos.reduce((sum: number, p: { stock: number }) => sum + p.stock, 0);
 
     return NextResponse.json({
-      totalArticulos,
+      activos,
+      inactivos,
       totalStock,
     });
   } catch (error) {

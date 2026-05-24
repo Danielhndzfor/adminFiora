@@ -25,7 +25,7 @@ const FTP_CONFIG = {
 }
 
 const REMOTE_PATH = process.env.FTP_REMOTE_PATH || '/httpdocs/fioraImages'
-const FTP_BASE_URL = process.env.FTP_BASE_URL || 'https://sad-diffie.198-251-78-127.plesk.page/fioraImages'
+const FTP_BASE_URL = process.env.FTP_BASE_URL || 'https://fiora.mascontrol.app/uploads/products'
 const TEST_FILE = 'test-fiora-migration.txt'
 
 interface TestResult {
@@ -93,7 +93,7 @@ export async function GET() {
         const ftp = await connectFTP()
 
         await new Promise<void>((resolve, reject) => {
-          ftp.list(REMOTE_PATH, (err) => {
+          ftp.list(REMOTE_PATH as string, (err) => {
             ftp.end()
             if (err) {
               reject(err)

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
 import { getCorsHeaders } from "@/lib/cors-utils"
+import { parseImagenesJSON } from "@/lib/image-handler-client"
 
 /**
  * GET /api/products/public/[id]
@@ -107,7 +108,7 @@ export async function GET(
         descripcion: producto.descripcion,
         precio: producto.precio,
         costo: producto.costo,
-        imagen: (producto.imagenes ? JSON.parse(producto.imagenes as string)[0]?.url : null) || '/products/default.jpg',
+        imagen: parseImagenesJSON(producto.imagenes as string)[0]?.url || '/products/default.jpg',
         stock: producto.stock,
         disponible: producto.stock > 0,
         palabrasClave: producto.palabrasClave,
