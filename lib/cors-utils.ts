@@ -21,26 +21,15 @@ export const cacheHeaders = {
 /**
  * Retorna headers CORS seguros para autenticación con cookies httpOnly
  * Soporta tanto solicitudes públicas como autenticadas
- * Valida múltiples orígenes permitidos
+ * Extrae el primer origen permitido si hay múltiples
  */
-export function getCorsHeaders(
-  cacheType: "public" | "short" | "detail" = "public",
-  requestOrigin?: string
-) {
+export function getCorsHeaders(cacheType: "public" | "short" | "detail" = "public") {
   const allowOriginEnv = (process.env.CORS_ALLOWED_ORIGINS || "http://localhost:3000").trim()
-  let allowOrigin = allowOriginEnv
-
-  // Si se pasa el origen del request, validar contra la lista de orígenes permitidos
-  if (requestOrigin && allowOriginEnv !== "*") {
-    const allowed = allowOriginEnv.split(",").map((s) => s.trim())
-    allowOrigin = allowed.includes(requestOrigin) ? requestOrigin : allowed[0]
-  }
-
+  // Si hay múltiples orígenes, usar el primero como fallback
+  const allowOrigin = allowOriginEnv.split(',')[0].trim()
+  
   return {
-    "Cache-Control":
-      cacheType === "public"
-        ? cacheHeaders[cacheType]
-        : cacheHeaders[cacheType],
+    "Cache-Control": cacheHeaders[cacheType],
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
