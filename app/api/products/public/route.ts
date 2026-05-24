@@ -13,7 +13,14 @@ import { parseImagenesJSON } from '@/lib/image-handler-client'
  * - page: número de página (default: 1)
  * - limit: cantidad por página (default: 12, max: 50)
  * - categoriaId: filtrar por categoría (opcional)
- * - palabra: búsqueda por nombre/descripción/palabrasClaves (opcional)
+ * - palabra o search: búsqueda por nombre/descripción/palabrasClaves (opcional)
+ * - sortBy: campo para ordenar (default: "nombre", opciones: "nombre", "codigo", "precio", "creadoEn")
+ * - order: dirección de orden (default: "asc", opciones: "asc", "desc")
+ * 
+ * Examples:
+ * - /api/products/public?page=1&limit=12
+ * - /api/products/public?search=vestido&sortBy=precio&order=desc
+ * - /api/products/public?categoriaId=5&page=1&limit=20&sortBy=codigo&order=desc
  * 
  * Response:
  * {
@@ -31,7 +38,10 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(params.get("page") || "1", 10));
     const limit = Math.min(50, Math.max(1, parseInt(params.get("limit") || "12", 10)));
     const categoriaId = params.get("categoriaId");
-    const palabra = params.get("palabra")?.trim() || "";
+    // Soporta tanto "palabra" como "search"
+    const palabra = (params.get("search") || params.get("palabra") || "").trim();
+    const sortBy = params.get("sortBy") || "nombre";
+    const order = (params.get("order") || "asc").toLowerCase();
 
     // Build where clause - solo productos activos
     const where: any = {
@@ -56,6 +66,14 @@ export async function GET(req: NextRequest) {
     // Get total count for pagination
     const total = await prisma.producto.count({ where });
 
+    // Build dynamic orderBy
+    const validSortFields = ["nombre", "codigo", "precio", "creadoEn"];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : "nombre";
+    const sortOrder = order === "desc" ? "desc" : "asc";
+
+    const orderByClause: any = {};
+    orderByClause[sortField] = sortOrder;
+
     // Get paginated products
     const productos = await prisma.producto.findMany({
       where,
@@ -78,7 +96,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { nombre: "asc" },
+      orderBy: orderByClause,
       skip: (page - 1) * limit,
       take: limit,
     });
